@@ -3,14 +3,18 @@ package com.lab.library;
 import com.lab.library.dao.*;
 
 import java.io.*;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Arrays;
 import javax.servlet.ServletException;
 import javax.servlet.http.*;
 import javax.servlet.annotation.*;
 
-@WebServlet(name = "frontServlet", value = "/front-servlet")
+@WebServlet(name = "frontServlet", value = "/library/*")
 public class FrontServlet extends HttpServlet {
     private ConnectionPool connectionPool;
 
@@ -35,16 +39,29 @@ public class FrontServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String surname = req.getParameter("surname");
-        String name = req.getParameter("name");
-        String email = req.getParameter("email");
+        resp.setContentType("text/html;charset=UTF-8");
+        req.setCharacterEncoding("UTF-8");
 
-        Connection connection = connectionPool.getConnection();
-        DBAction.insertIntoDB(surname, name, email, connection);
-        ResultSet resultSet = DBAction.select(connection);
-        PrintWriter printWriter = resp.getWriter();
-        write(printWriter, resultSet);
-        printWriter.println("Привет");
+
+        System.out.println(req.getParameter("patronymic"));
+        String referer = null;
+        try {
+            referer = new URI(req.getHeader("referer")).getPath();
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+        }
+
+        switch (referer) {
+            case "/addReader.jsp":
+//                if (InsertIntoDb.addReader(req, connectionPool.getConnection())) {
+//                    System.out.println(req.getParameter("patronymic"));
+//                    getServletContext().setAttribute("added", "Новый читатель");
+//                    getServletContext().getRequestDispatcher("/successfully.jsp").forward(req, resp);
+//                }
+                System.out.println("RED");
+
+        }
+
     }
 
     public void destroy() {
