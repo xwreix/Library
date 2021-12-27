@@ -1,34 +1,31 @@
 package com.lab.library.dao;
 
 import javax.servlet.http.HttpServletRequest;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 
 public class InsertIntoDb {
 
     public static boolean addReader(HttpServletRequest request, Connection connection){
-        Statement statement = null;
+        String SQL = "INSERT INTO reader" +
+                " (surname, name, patronymic, passportNumber, dateOfBirth, address, email)" +
+                " VALUES (?, ?, ?, ?, ?, ?, ?)";
+        try (PreparedStatement statement = connection.prepareStatement(SQL)) {
 
-        try {
-            statement = connection.createStatement();
+            statement.setString(1, request.getParameter("surname"));
+            statement.setString(2, request.getParameter("name"));
+            statement.setString(3, request.getParameter(("patronymic")));
+            statement.setString(4, request.getParameter("passportNumber"));
+            statement.setDate(5, Date.valueOf(request.getParameter("dateOfBirth")));
+            statement.setString(6, request.getParameter("address"));
+            statement.setString(7, request.getParameter("email"));
 
-            statement.executeUpdate
-                    ("INSERT INTO reader (surname, name, patronymic, passportNumber, dateofBirth, city, street, building, flat, email) values" +
-                            " ('"+ request.getParameter("surname") + "', '"+
-                            request.getParameter("name") + "', '"+
-                            request.getParameter("patronymic") + "', '"+
-                            request.getParameter("passport") + "', '"+
-                            request.getParameter("dateOfBirth") + "', '"+
-                            request.getParameter("city") + "', '"+
-                            request.getParameter("street") + "', '"+
-                            request.getParameter("building") + "', '"+
-                            request.getParameter("flat") + "', '"+
-                            request.getParameter("email") + "')");
-        } catch (SQLException e) {
-            e.printStackTrace();
+            statement.executeUpdate();
+        } catch (Exception e) {
+            //TODO log
+            return false;
         }
         return true;
+
     }
 
 }

@@ -8,22 +8,47 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <html>
 <head>
-    <link rel="stylesheet" href="css/style.css" type="text/css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css" type="text/css">
     <title>Новый читатель</title>
 </head>
 <body>
 <div class="container">
-    <form action="/library" method="post" id="addReader" class="form">
+    <form action="/library" method="post" id="newReader" class="form">
         <h1>Регистрация нового читателя</h1>
+
         <div class="form-field success">
             <label for="surname">Фамилия:</label>
-            <input type="text" name="surname" id="surname" autocapitalize="on" autocomplete="off">
+            <input type="text" name="surname" id="surname" autocapitalize="words" autocomplete="off">
             <small></small>
         </div>
 
         <div class="form-field success">
-            <label for="patronymic">Отчетство:</label>
-            <input type="text" name="patronymic" id="patronymic" autocapitalize="on" autocomplete="off">
+            <label for="name">Имя:</label>
+            <input type="text" name="name" id="name" autocapitalize="words" autocomplete="off">
+            <small></small>
+        </div>
+
+        <div class="form-field success">
+            <label for="patronymic">Отчество:</label>
+            <input type="text" name="patronymic" id="patronymic" autocapitalize="words" autocomplete="off">
+            <small></small>
+        </div>
+
+        <div class="form-field success">
+            <label for="passportNumber">Номер паспорта:</label>
+            <input type="text" name="passportNumber" id="passportNumber" autocomplete="off" autocapitalize="characters">
+            <small></small>
+        </div>
+
+        <div class="form-field success">
+            <label for="dateOfBirth">Дата рождения:</label>
+            <input type="date" name="dateOfBirth" id="dateOfBirth" autocomplete="off">
+            <small></small>
+        </div>
+
+        <div class="form-field success">
+            <label for="address">Дата рождения:</label>
+            <input type="text" name="address" id="address" autocomplete="off">
             <small></small>
         </div>
 
@@ -39,27 +64,6 @@
     </form>
 </div>
 
-<script src="js/addReader.js"></script>
-<%--<h1>Регистрация нового читателя</h1>--%>
-<%--<form action="/library/addReader" method="post" name="addReader">--%>
-<%--    <p>Фамилия: </p>--%>
-<%--    <input type="text" name="surname">--%>
-<%--    <p>Имя: </p>--%>
-<%--    <input type="text" name="name">--%>
-<%--    <p>Отчество: </p>--%>
-<%--    <input type="text" name="patronymic">--%>
-<%--    <p>Номер паспорта: </p>--%>
-<%--    <input type="text" name="passport">--%>
-<%--    <p>Дата рождения: </p>--%>
-<%--    <input type="date"name="dateOfBirth">--%>
-<%--    <p>Адрес (город, улица, дом, квартира): </p>--%>
-<%--    <input type="text "name="city" class="address">--%>
-<%--    <input type="text" name="street" class="address">--%>
-<%--    <input type="text" name="building" class="address short">--%>
-<%--    <input type="number" name="flat" class="address short">--%>
-<%--    <p>Электронная почта: </p>--%>
-<%--    <input type="email"name="email">--%>
-<%--    <input type="submit" name="Send">--%>
-<%--</form>--%>
+<script src="${pageContext.request.contextPath}/js/addReader.js"></script>
 </body>
 </html>
