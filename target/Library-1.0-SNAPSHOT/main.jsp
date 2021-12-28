@@ -11,7 +11,7 @@
     <title>Библиотека</title>
 </head>
 <body>
-<form action="addReader.jsp">
+<form action="${pageContext.request.contextPath}/library/addReader">
     <button>Добавить читателя</button>
 </form>
 </body>

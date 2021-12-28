@@ -47,7 +47,7 @@
         </div>
 
         <div class="form-field success">
-            <label for="address">Дата рождения:</label>
+            <label for="address">Адрес:</label>
             <input type="text" name="address" id="address" autocomplete="off">
             <small></small>
         </div>

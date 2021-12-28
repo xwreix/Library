@@ -3,6 +3,8 @@ package com.lab.library;
 import com.lab.library.dao.*;
 
 import java.io.*;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.sql.SQLException;
 import javax.servlet.ServletException;
 import javax.servlet.http.*;
@@ -46,19 +48,19 @@ public class FrontServlet extends HttpServlet {
         response.setContentType("text/html;charset=UTF-8");
         reqest.setCharacterEncoding("UTF-8");
 
-//        String referer = null;
-//        try {
-//            referer = new URI(reqest.getHeader("referer")).getPath();
-//        } catch (URISyntaxException e) {
-//            e.printStackTrace();
-//        }
-//
-//        switch (referer) {
-//            case "/addReader.jsp":
-//                if(!InsertIntoDb.addReader(reqest, connectionPool.getConnection())){
-//                    getServletContext().getRequestDispatcher("/addReader.jsp").forward(reqest, response);
-//                };
-//        }
+        String referer = null;
+        try {
+            referer = new URI(reqest.getHeader("referer")).getPath();
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+        }
+
+        switch (referer) {
+            case "/library/addReader":
+                if(!InsertIntoDb.addReader(reqest, connectionPool.getConnection())){
+                    getServletContext().getRequestDispatcher("/main.jsp").forward(reqest, response);
+                };
+        }
 
     }
 
