@@ -13,46 +13,46 @@
 </head>
 <body>
 <div class="container">
-    <form action="/library" method="post" id="newReader" class="form">
+    <form action="/library/addReader" method="post" id="newReader" class="form">
         <h1>Регистрация нового читателя</h1>
 
-        <div class="form-field success">
+        <div class="form-field">
             <label for="surname">Фамилия:</label>
             <input type="text" name="surname" id="surname" autocapitalize="words" autocomplete="off">
             <small></small>
         </div>
 
-        <div class="form-field success">
+        <div class="form-field">
             <label for="name">Имя:</label>
             <input type="text" name="name" id="name" autocapitalize="words" autocomplete="off">
             <small></small>
         </div>
 
-        <div class="form-field success">
+        <div class="form-field">
             <label for="patronymic">Отчество:</label>
             <input type="text" name="patronymic" id="patronymic" autocapitalize="words" autocomplete="off">
             <small></small>
         </div>
 
-        <div class="form-field success">
+        <div class="form-field">
             <label for="passportNumber">Номер паспорта:</label>
             <input type="text" name="passportNumber" id="passportNumber" autocomplete="off" autocapitalize="characters">
             <small></small>
         </div>
 
-        <div class="form-field success">
+        <div class="form-field">
             <label for="dateOfBirth">Дата рождения:</label>
             <input type="date" name="dateOfBirth" id="dateOfBirth" autocomplete="off">
             <small></small>
         </div>
 
-        <div class="form-field success">
-            <label for="address">Дата рождения:</label>
+        <div class="form-field">
+            <label for="address">Адрес:</label>
             <input type="text" name="address" id="address" autocomplete="off">
             <small></small>
         </div>
 
-        <div class="form-field success">
+        <div class="form-field">
             <label for="email">Электронная почта:</label>
             <input type="text" name="email" id="email" autocomplete="off">
             <small></small>

@@ -14,5 +14,8 @@
 <form action="${pageContext.request.contextPath}/library/addReader">
     <button>Добавить читателя</button>
 </form>
+<form action="${pageContext.request.contextPath}/library/addBook">
+    <button>Добавить книгу</button>
+</form>
 </body>
 </html>

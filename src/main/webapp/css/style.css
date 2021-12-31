@@ -58,18 +58,75 @@ body {
     width: 100%;
 }
 
+.form-field select {
+    border: solid 2px #f0f0f0;
+    border-radius: 3px;
+    padding: 10px;
+    margin-bottom: 5px;
+    font-size: 14px;
+    display: block;
+    width: 100%;
+}
+
 .form-field input:focus {
     outline: none;
 }
 
-.form-field.error input {
+.form-field.error input{
     border-color: var(--error-color);
 }
 
-.form-field.success input {
+.form-field.success select{
+    border-color: var(--success-color);
+}
+
+.form-field.error select{
+    border-color: var(--error-color);
+}
+
+.form-field.success input{
     border-color: var(--success-color);
 }
 
 .form-field small {
     color: var(--error-color);
+}
+
+.pull-right {
+    float: right;
+}
+
+.table {
+    display: table;
+    width: 100%;
+    padding-bottom: 10px;
+}
+
+.student:last-child .table {
+    padding-bottom: 0;
+}
+
+.table .cell {
+    display: table-cell;
+    vertical-align: top;
+}
+
+.btn {
+    border: solid 2px #f0f0f0;
+    border-radius: 3px;
+    padding: 10px;
+    margin-bottom: 5px;
+    display: block;
+}
+
+.btn-danger {
+    color: #fff;
+    background-color: #d9534f;
+    border-color: #d43f3a;
+}
+
+.btn-success {
+    color: #fff;
+    background-color: #5cb85c;
+    border-color: #4cae4c;
 }

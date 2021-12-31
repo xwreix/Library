@@ -23,9 +23,14 @@ public class InsertIntoDb {
         } catch (Exception e) {
             //TODO log
             return false;
+
         }
         return true;
 
     }
+
+//    public static boolean insertImage(HttpServletRequest request){
+//        File file = new File(request.getParameter(""));
+//    }
 
 }

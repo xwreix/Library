@@ -1,16 +1,24 @@
 package com.lab.library;
 
-import com.lab.library.dao.*;
+import com.lab.library.dao.ConnectionPool;
+import com.lab.library.dao.ConnectionPoolRealiz;
+import com.lab.library.dao.GetFromDB;
 
-import java.io.*;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.sql.SQLException;
 import javax.servlet.ServletException;
-import javax.servlet.http.*;
-import javax.servlet.annotation.*;
+import javax.servlet.annotation.MultipartConfig;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.Part;
+import java.io.IOException;
+import java.io.InputStream;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 @WebServlet(name = "frontServlet", value = "/library/*")
+@MultipartConfig
 public class FrontServlet extends HttpServlet {
     private ConnectionPool connectionPool;
 
@@ -29,9 +37,13 @@ public class FrontServlet extends HttpServlet {
         String referer = request.getRequestURI();
         String url = "/main.jsp";
 
-        switch (referer){
+        switch (referer) {
             case ("/library/addReader"):
                 url = "/addReader.jsp";
+                break;
+            case ("/library/addBook"):
+                url = "/addBook.jsp";
+                request.setAttribute("genres", GetFromDB.getGenres(connectionPool.getConnection()));
                 break;
 
         }
@@ -44,24 +56,60 @@ public class FrontServlet extends HttpServlet {
     }
 
     @Override
-    protected void doPost(HttpServletRequest reqest, HttpServletResponse response) throws ServletException, IOException {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         response.setContentType("text/html;charset=UTF-8");
-        reqest.setCharacterEncoding("UTF-8");
+        request.setCharacterEncoding("UTF-8");
 
-        String referer = null;
+        Part filePart = request.getPart("file");
+        InputStream fileContent = filePart.getInputStream();
         try {
-            referer = new URI(reqest.getHeader("referer")).getPath();
-        } catch (URISyntaxException e) {
+            PreparedStatement ps = connectionPool.getConnection().prepareStatement("INSERT INTO images(img, id) VALUES (?, ?)");
+            ps.setBinaryStream(1, fileContent);
+            ps.setInt(2, 1);
+            ps.executeUpdate();
+            System.out.println("Done");
+
+            ps = connectionPool.getConnection().prepareStatement("SELECT img FROM images WHERE id = ?");
+            ps.setInt(1, 1);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                byte[] imgBytes = rs.getBytes(1);
+                response.setContentType("image/jpg");
+                response.getOutputStream().write(imgBytes);
+                response.getOutputStream().flush();
+                response.getOutputStream().close();
+            }
+            rs.close();
+            ps.close();
+        } catch (SQLException e) {
             e.printStackTrace();
         }
 
-        switch (referer) {
-            case "/library/addReader":
-                if(!InsertIntoDb.addReader(reqest, connectionPool.getConnection())){
-                    getServletContext().getRequestDispatcher("/main.jsp").forward(reqest, response);
-                };
-        }
-
+//        String referer = null;
+//        try {
+//            referer = new URI(request.getHeader("referer")).getPath();
+//        } catch (URISyntaxException e) {
+//            e.printStackTrace();
+//        }
+//
+//        switch (referer) {
+//            case "/library/addReader":
+//                if (InsertIntoDb.addReader(request, connectionPool.getConnection())) {
+//                    request.setAttribute("result", "Пользователь создан успешно.");
+//                } else {
+//                    request.setAttribute("result", "Не удалось создать пользователя.");
+//                }
+//                getServletContext().getRequestDispatcher("/result.jsp").forward(request, response);
+//                break;
+//            case "/library/addBook":
+//
+//
+//                break;
+//
+//                        //InsertIntoDb.insertImage(request);
+//
+//                    }
+//
     }
 
     public void destroy() {

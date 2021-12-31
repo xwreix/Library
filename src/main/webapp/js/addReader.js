@@ -125,7 +125,7 @@ const checkPassport = () => {
     let valid = false;
     const val = passportNumber.value.trim();
     const re = /[A-Z]{2}[0-9]{7}/;
-    if(!re.test(val)){
+    if(!re.test(val) && !isEmpty(val)){
         showError(passportNumber, "Номер паспорта введён некорректно");
     } else {
         showSuccess(passportNumber);
