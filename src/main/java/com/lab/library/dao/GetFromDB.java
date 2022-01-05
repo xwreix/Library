@@ -6,7 +6,7 @@ import java.util.Map;
 
 public class GetFromDB {
     public static Map<Integer, String> getGenres(Connection connection){
-        String SQL = "SELECT * FROM genre";
+        String SQL = "SELECT id, name FROM genre";
         Map<Integer, String> genres = new HashMap<>();
 
         try {

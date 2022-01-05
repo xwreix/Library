@@ -2,15 +2,12 @@ package com.lab.library.dao;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.Part;
 import java.io.IOException;
-import java.io.InputStream;
-import java.sql.*;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.List;
+import java.sql.Connection;
+import java.sql.Date;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.Objects;
-import java.util.regex.Pattern;
 
 public class InsertIntoDb {
 
@@ -52,81 +49,16 @@ public class InsertIntoDb {
     public static boolean addBook(HttpServletRequest request, Connection connection) {
         try {
             connection.setAutoCommit(false);
+            AddBookService addBookService = new AddBookService(request, connection);
 
-            String SQL = "INSERT INTO book(nameInRus, originalName, cost, priceForDay, publYear, pageAmount) " +
-                    "VALUES (?, ?, ?, ?, ?, ?) RETURNING id";
+            int id = addBookService.insertIntoBook();
 
-            PreparedStatement statement = connection.prepareStatement(SQL);
-            statement.setString(1, request.getParameter("nameInRus"));
+            addBookService.insertIntoCover(id);
+            addBookService.insertIntoGenre(id);
+            addBookService.insertAuthor(id);
 
-            String originalName = setNull(request.getParameter("originalName"));
-            statement.setString(2, originalName);
 
-            statement.setDouble(3, Double.parseDouble(request.getParameter("cost")));
-            statement.setDouble(4, Double.parseDouble(request.getParameter("priceForDay")));
-
-            String publYear = request.getParameter("publYear");
-            if (Objects.equals(publYear, "")) {
-                statement.setNull(5, Types.INTEGER);
-            } else {
-                statement.setString(5, publYear);
-            }
-
-            String pageAmount = request.getParameter("pageAmount");
-            if (Objects.equals(pageAmount, "")) {
-                statement.setNull(6, Types.INTEGER);
-            } else {
-                statement.setString(6, pageAmount);
-            }
-
-            ResultSet resultSet = statement.executeQuery();
-            int id = 0;
-            while (resultSet.next()) {
-                id = resultSet.getInt(1);
-            }
-
-            SQL = "INSERT INTO cover (bookId, img) VALUES (?, ?)";
-            List<Part> parts = (List<Part>) request.getParts();
-            for (Part part : parts) {
-                if (part.getName().equalsIgnoreCase("covers[]")) {
-                    InputStream inputStream = part.getInputStream();
-                    statement = connection.prepareStatement(SQL);
-                    statement.setInt(1, id);
-                    statement.setBinaryStream(2, inputStream);
-                    statement.executeUpdate();
-                }
-            }
-
-            SQL = "INSERT INTO BooksGenres (genreId, bookId) VALUES (?, ?)";
-            String[] genresId = request.getParameterValues("genres");
-            for (String genre : genresId) {
-                statement = connection.prepareStatement(SQL);
-                statement.setInt(1, Integer.parseInt(genre));
-                statement.setInt(2, id);
-                statement.executeUpdate();
-            }
-
-            SQL = "INSERT INTO bookCopy(bookId, registrDate) VALUES (?, ?)";
-            Date date = Date.valueOf(request.getParameter("registrDate"));
-            int amount = Integer.parseInt(request.getParameter("amount"));
-            for (int i = 0; i < amount; i++) {
-                statement = connection.prepareStatement(SQL);
-                statement.setInt(1, id);
-                statement.setDate(2, date);
-                statement.executeUpdate();
-            }
-
-            Enumeration<String> params = request.getParameterNames();
-            List<String> authors = new ArrayList<>();
-            while(params.hasMoreElements()){
-                String el = params.nextElement();
-                if(Pattern.matches("author[0-9]*", el)){
-                    authors.add(el);
-                }
-            }
-            for(String param: authors){
-                String photosParam = "authorPhotos" + param.substring(6) + "[]";
-            }
+            addBookService.insertIntoBookCopy(id);
 
             connection.commit();
         } catch (SQLException e) {
@@ -138,9 +70,7 @@ public class InsertIntoDb {
             //TODO log
             e.printStackTrace();
             return false;
-        } catch (ServletException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
+        } catch (ServletException | IOException e) {
             e.printStackTrace();
         }
 
