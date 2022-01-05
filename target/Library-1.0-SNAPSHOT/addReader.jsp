@@ -13,7 +13,7 @@
 </head>
 <body>
 <div class="container">
-    <form action="/library/addReader" method="post" id="newReader" class="form">
+    <form action="/library/addReader" method="post" id="newReader" class="form" enctype="multipart/form-data">
         <h1>Регистрация нового читателя</h1>
 
         <div class="form-field">
@@ -64,6 +64,9 @@
     </form>
 </div>
 
+
+<script src="http://code.jquery.com/jquery-1.11.0.js"></script>
+<script src="${pageContext.request.contextPath}/js/validation.js"></script>
 <script src="${pageContext.request.contextPath}/js/addReader.js"></script>
 </body>
 </html>

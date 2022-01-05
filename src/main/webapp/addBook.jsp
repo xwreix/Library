@@ -15,7 +15,7 @@
 </head>
 <body>
 <div class="container">
-    <form action="/library/addBook" method="post" id="newBook" class="form">
+    <form action="/library/addBook" method="post" id="newBook" class="form" enctype="multipart/form-data">
         <h1>Регистрация новой книги</h1>
 
         <div class="form-field">
@@ -32,7 +32,7 @@
 
         <div class="form-field">
             <label for="genres">Выберите жанры:</label>
-            <select name="genres" id="genres" multiple size="3">
+            <select class="error" name="genres" id="genres" multiple size="3">
                 <c:forEach var="genre" items="${genres}">
                     <option value="${genre.key}">${genre.value}</option>
                 </c:forEach>
@@ -42,7 +42,7 @@
 
         <div class="form-field">
             <label for="cost">Стоимость:</label>
-            <input type="number" step="0.01" name="cost" id="cost"autocomplete="off">
+            <input type="number" step="0.01" name="cost" id="cost" autocomplete="off">
             <small></small>
         </div>
 
@@ -52,27 +52,26 @@
             <small></small>
         </div>
 
-        <div class="form-field dynamic_fields">
-            <label for="author[]">Авторы:</label>
-            <div class="author">
-                <div class="table">
-                    <div class="cell">
-                        <input type="text" name="author[]" id="author[]" autocomplete="off"/>
-                    </div>
-                    <div class="cell">
-                        <button class="remove pull-right btn btn-danger" type="button">-</button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="authors"></div>
-
-            <button class="add btn btn-success" type="button">+</button>
+        <div class="form-field authors">
+            <h3>Авторы:</h3>
+            <label> Имя автора:
+                <input type="text" class="authorName" name="author1" id="author">
+                <small></small>
+            </label>
+            <label> Фото автора:
+                <input type="file" name="authorPhotos1[]" id="authorPhotos" multiple accept="image/*>">
+            </label>
         </div>
 
-        //many pictures of author
+        <div class="form-field add">
+            <button type="button" name="addAuthor" id="addAuthor">Добавить ещё одного автора</button>
+        </div>
 
-        //many covers
+        <div class="form-field">
+            <label for="covers">Обложки книги:</label>
+            <input type="file" name="covers[]" id="covers" multiple accept="image/*">
+            <small></small>
+        </div>
 
         <div class="form-field">
             <label for="priceForDay">Цена за день использования:</label>
@@ -103,8 +102,9 @@
         </div>
     </form>
 </div>
-</form>
 
+<script src="${pageContext.request.contextPath}/js/validation.js"></script>
+<script src="http://code.jquery.com/jquery-1.11.0.js"></script>
 <script src="${pageContext.request.contextPath}/js/addBook.js"></script>
 </body>
 </html>
