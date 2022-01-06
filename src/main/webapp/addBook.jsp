@@ -11,7 +11,7 @@
 <head>
     <title>Новая книга</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/reset.css" type="text/css">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css" type="text/css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/form.css" type="text/css">
 </head>
 <body>
 <div class="container">
@@ -32,7 +32,7 @@
 
         <div class="form-field">
             <label for="genres">Выберите жанры:</label>
-            <select class="error" name="genres" id="genres" multiple size="3">
+            <select class="error" name="genres" id="genres" multiple size="5">
                 <c:forEach var="genre" items="${genres}">
                     <option value="${genre.key}">${genre.value}</option>
                 </c:forEach>

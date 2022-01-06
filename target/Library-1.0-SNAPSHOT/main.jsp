@@ -9,13 +9,13 @@
 <html>
 <head>
     <title>Библиотека</title>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css" type="text/css">
 </head>
 <body>
-<form action="${pageContext.request.contextPath}/library/addReader">
-    <button>Добавить читателя</button>
-</form>
-<form action="${pageContext.request.contextPath}/library/addBook">
-    <button>Добавить книгу</button>
-</form>
+<div class="btn-group">
+    <a href="${pageContext.request.contextPath}/library/addReader" class="button">Добавить читателя</a>
+    <a href="${pageContext.request.contextPath}/library/addBook" class="button">Добавить книгу</a>
+</div>
+<jsp:include page="bookList.jsp"/>
 </body>
 </html>

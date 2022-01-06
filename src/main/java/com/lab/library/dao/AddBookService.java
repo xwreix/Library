@@ -41,14 +41,14 @@ public class AddBookService {
         if (Objects.equals(publYear, "")) {
             statement.setNull(5, Types.INTEGER);
         } else {
-            statement.setString(5, publYear);
+            statement.setInt(5, Integer.parseInt(publYear));
         }
 
         String pageAmount = request.getParameter("pageAmount");
         if (Objects.equals(pageAmount, "")) {
             statement.setNull(6, Types.INTEGER);
         } else {
-            statement.setString(6, pageAmount);
+            statement.setInt(6, Integer.parseInt(pageAmount));
         }
 
         ResultSet resultSet = statement.executeQuery();

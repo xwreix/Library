@@ -1,11 +1,15 @@
 package com.lab.library.dao;
 
+import com.lab.library.beans.Book;
+
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class GetFromDB {
-    public static Map<Integer, String> getGenres(Connection connection){
+    public static Map<Integer, String> setGenres(Connection connection) {
         String SQL = "SELECT id, name FROM genre";
         Map<Integer, String> genres = new HashMap<>();
 
@@ -13,7 +17,7 @@ public class GetFromDB {
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery(SQL);
 
-            while(resultSet.next()){
+            while (resultSet.next()) {
                 genres.put(resultSet.getInt(1), resultSet.getString(2));
             }
         } catch (SQLException e) {
@@ -21,7 +25,68 @@ public class GetFromDB {
             //TODO log
         }
 
-        return  genres;
+        return genres;
     }
 
+    public static List<Book> setBooks(Connection connection) {
+        List<Book> books = new ArrayList<>();
+
+        try {
+            connection.setAutoCommit(false);
+
+            String SQL = "SELECT id, nameInRus, publYear from book";
+            PreparedStatement statement = connection.prepareStatement(SQL);
+            ResultSet resultSet = statement.executeQuery();
+
+            while (resultSet.next()) {
+                int id = resultSet.getInt("id");
+                String name = resultSet.getString("nameInRus");
+                int year = resultSet.getInt("publYear");
+
+                String query = "SELECT COUNT(*) FROM bookcopy WHERE bookId = ?";
+                statement = connection.prepareStatement(query);
+                statement.setInt(1, id);
+                ResultSet result = statement.executeQuery();
+                int totalAmount = 0;
+                while(result.next()){
+                    totalAmount = result.getInt(1);
+                }
+
+                query = "select count(*) from issue\n" +
+                        " join bookcopy on bookcopy.id = issue.bookcopyid\n" +
+                        " where bookcopy.bookId = ? AND returnDate is NULL";
+                statement = connection.prepareStatement(query);
+                statement.setInt(1, id);
+                result = statement.executeQuery();
+                int availableAmount = totalAmount;
+                while(result.next()){
+                    availableAmount -= result.getInt(1);
+                }
+
+                List<String> genres = new ArrayList<>();
+                query = "select name from genre\n" +
+                        "join booksgenres on booksgenres.genreId = genre.id\n" +
+                        "where bookId = ?";
+                statement = connection.prepareStatement(query);
+                statement.setInt(1, id);
+                result = statement.executeQuery();
+                while (result.next()){
+                    genres.add(result.getString("name"));
+                }
+
+                books.add(new Book(id, name, genres, year, totalAmount, availableAmount));
+            }
+
+            connection.commit();
+        } catch (SQLException e) {
+            try {
+                connection.rollback();
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+            e.printStackTrace();
+        }
+
+        return books;
+    }
 }

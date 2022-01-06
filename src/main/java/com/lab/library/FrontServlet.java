@@ -42,7 +42,11 @@ public class FrontServlet extends HttpServlet {
                 break;
             case ("/library/addBook"):
                 url = "/addBook.jsp";
-                request.setAttribute("genres", GetFromDB.getGenres(connectionPool.getConnection()));
+                request.setAttribute("genres", GetFromDB.setGenres(connectionPool.getConnection()));
+                break;
+            case ("/library"):
+                url = "/main.jsp";
+                request.setAttribute("books", GetFromDB.setBooks(connectionPool.getConnection()));
                 break;
 
         }
@@ -77,7 +81,7 @@ public class FrontServlet extends HttpServlet {
                     getServletContext().getRequestDispatcher("/result.jsp").forward(request, response);
                     break;
                 case "/library/addBook":
-                    if(InsertIntoDb.addBook(request, connectionPool.getConnection())){
+                    if (InsertIntoDb.addBook(request, connectionPool.getConnection())) {
                         request.setAttribute("result", "Книга добавлена успешно.");
                     } else {
                         request.setAttribute("result", "Не удалось добавить книгу");
