@@ -2,56 +2,56 @@
 <%--
   Created by IntelliJ IDEA.
   User: xwreix
-  Date: 06.01.2022
-  Time: 15:37
+  Date: 09.01.2022
+  Time: 14:55
   To change this template use File | Settings | File Templates.
 --%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <html>
 <head>
-    <title>Список книг</title>
+    <title>Список читателей</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/table.css" type="text/css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css" type="text/css">
 </head>
 <body>
+
 <div class="container">
     <div class="search">
-        <input type="text" placeholder="Введите наименование" id="search" onkeyup="tableSearch()"
-        onkeydown="">
+        <input type="text" placeholder="Введите фамилию" id="search" onkeyup="tableSearch()"
+               onkeydown="">
     </div>
-    <table class="table sorted" id="list">
+    <table class="table sorted searchable" id="list">
         <thead>
         <tr>
-            <th>Название книги</th>
-            <th>Жанры</th>
-            <th datatype="number">Год выпуска</th>
-            <th datatype="number">Общее количество экземпляров</th>
-            <th datatype="number">Количество доступных к выдаче экзмепляров</th>
+            <th>Фамилия</th>
+            <th>Имя</th>
+            <th>Дата рождения</th>
+            <th>Адрес</th>
+            <th>Электронная почта</th>
             <th class="hidden">id</th>
         </tr>
         </thead>
         <tbody>
-        <c:forEach items="${requestScope.books}" var="element">
+        <c:forEach items="${requestScope.readers}" var="element">
             <tr>
+                <td>${element.surname}</td>
                 <td>${element.name}</td>
+                <td>${element.dateOfBirth}</td>
 
-                <td>
-                    <c:forEach items="${element.genres}" var="genre">
-                        <ol>${genre}</ol>
-                    </c:forEach>
-                </td>
 
                 <td>
                     <c:choose>
-                        <c:when test="${element.year == 0}">
+                        <c:when test="${element.address == null}">
                             -
                         </c:when>
                         <c:otherwise>
-                            ${element.year}
+                            ${element.address}
                         </c:otherwise>
                     </c:choose>
                 </td>
-                <td>${element.totalAmount}</td>
-                <td>${element.availableAmount}</td>
+
+                <td>${element.email}</td>
+
                 <td class="hidden">${element.id}</td>
             </tr>
         </c:forEach>

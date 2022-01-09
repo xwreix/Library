@@ -1,4 +1,4 @@
-package com.lab.library.dao;
+package com.lab.library.dao.DBService;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;

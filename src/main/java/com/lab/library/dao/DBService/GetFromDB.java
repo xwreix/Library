@@ -1,14 +1,14 @@
-package com.lab.library.dao;
+package com.lab.library.dao.DBService;
 
-import com.lab.library.beans.Book;
+import com.lab.library.dao.beans.Book;
+import com.lab.library.dao.beans.Reader;
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.Date;
 
 public class GetFromDB {
+
     public static Map<Integer, String> setGenres(Connection connection) {
         String SQL = "SELECT id, name FROM genre";
         Map<Integer, String> genres = new HashMap<>();
@@ -24,6 +24,7 @@ public class GetFromDB {
             e.printStackTrace();
             //TODO log
         }
+
 
         return genres;
     }
@@ -87,6 +88,33 @@ public class GetFromDB {
             e.printStackTrace();
         }
 
+        Collections.sort(books);
         return books;
     }
+
+    public static List<Reader> setReaders(Connection connection){
+        List<Reader> readers = new ArrayList<>();
+
+        String SQL = "SELECT id, surname, name, dateOfBirth, address, email FROM reader ORDER BY surname";
+
+        try {
+            PreparedStatement statement = connection.prepareStatement(SQL);
+            ResultSet resultSet = statement.executeQuery();
+            while(resultSet.next()){
+                int id = resultSet.getInt("id");
+                String surname = resultSet.getString("surname");
+                String name = resultSet.getString("name");
+                Date dateOfBirth = resultSet.getDate("dateOfBirth");
+                String address = resultSet.getString("address");
+                String email = resultSet.getString("email");
+
+                readers.add(new Reader(id, surname, name, dateOfBirth, address, email));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return readers;
+    }
+
 }

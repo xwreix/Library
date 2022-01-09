@@ -1,9 +1,6 @@
 package com.lab.library;
 
-import com.lab.library.dao.ConnectionPool;
-import com.lab.library.dao.ConnectionPoolRealiz;
-import com.lab.library.dao.GetFromDB;
-import com.lab.library.dao.InsertIntoDb;
+import com.lab.library.dao.DBManager;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
@@ -14,22 +11,13 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.sql.SQLException;
 
 @WebServlet(name = "frontServlet", value = "/library/*")
 @MultipartConfig
 public class FrontServlet extends HttpServlet {
-    private ConnectionPool connectionPool;
+    DBManager dbManager = new DBManager();
 
     public void init() {
-        try {
-            connectionPool = ConnectionPoolRealiz.create
-                    ("jdbc:postgresql://localhost:5432/library?characterEncoding=UTF8&useUnicode=true",
-                            "postgres", "mnr1209");
-        } catch (SQLException e) {
-            e.printStackTrace();
-            System.out.println("Not successful connection");
-        }
     }
 
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -42,11 +30,15 @@ public class FrontServlet extends HttpServlet {
                 break;
             case ("/library/addBook"):
                 url = "/addBook.jsp";
-                request.setAttribute("genres", GetFromDB.setGenres(connectionPool.getConnection()));
+                request.setAttribute("genres", dbManager.selectFromGenres());
+                break;
+            case ("/library/readerList"):
+                url = "/readerList.jsp";
+                request.setAttribute("readers", dbManager.selectFromReader());
                 break;
             case ("/library"):
                 url = "/main.jsp";
-                request.setAttribute("books", GetFromDB.setBooks(connectionPool.getConnection()));
+                request.setAttribute("books", dbManager.selectFromBook());
                 break;
 
         }
@@ -73,7 +65,7 @@ public class FrontServlet extends HttpServlet {
         if (referer != null) {
             switch (referer) {
                 case "/library/addReader":
-                    if (InsertIntoDb.addReader(request, connectionPool.getConnection())) {
+                    if (dbManager.addReader(request)) {
                         request.setAttribute("result", "Пользователь создан успешно.");
                     } else {
                         request.setAttribute("result", "Не удалось создать пользователя.");
@@ -81,7 +73,7 @@ public class FrontServlet extends HttpServlet {
                     getServletContext().getRequestDispatcher("/result.jsp").forward(request, response);
                     break;
                 case "/library/addBook":
-                    if (InsertIntoDb.addBook(request, connectionPool.getConnection())) {
+                    if (dbManager.addBook(request)) {
                         request.setAttribute("result", "Книга добавлена успешно.");
                     } else {
                         request.setAttribute("result", "Не удалось добавить книгу");
@@ -97,5 +89,4 @@ public class FrontServlet extends HttpServlet {
 
     public void destroy() {
     }
-
 }

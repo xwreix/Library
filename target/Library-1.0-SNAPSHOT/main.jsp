@@ -15,6 +15,7 @@
 <div class="btn-group">
     <a href="${pageContext.request.contextPath}/library/addReader" class="button">Добавить читателя</a>
     <a href="${pageContext.request.contextPath}/library/addBook" class="button">Добавить книгу</a>
+    <a href="${pageContext.request.contextPath}/library/readerList" class="button">Список читателей</a>
 </div>
 <jsp:include page="bookList.jsp"/>
 </body>

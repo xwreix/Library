@@ -1,8 +1,8 @@
-package com.lab.library.beans;
+package com.lab.library.dao.beans;
 
 import java.util.List;
 
-public class Book {
+public class Book implements Comparable<Book>{
     private  int id;
     private String name;
     private List<String> genres;
@@ -65,5 +65,16 @@ public class Book {
 
     public void setAvailableAmount(int availableAmount) {
         this.availableAmount = availableAmount;
+    }
+
+    @Override
+    public int compareTo(Book o) {
+        int result;
+        result = Integer.compare(availableAmount, o.availableAmount);
+        if(result!=0){
+            return  result;
+        }
+        result = name.compareTo(o.name);
+        return result;
     }
 }

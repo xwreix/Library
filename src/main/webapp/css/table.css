@@ -17,6 +17,7 @@
     font-size: 15px;
     border-top: 3px solid #fff;
     border-bottom: 3px solid #F0E68C;
+    cursor: pointer;
 }
 .table td {
     padding: 7px;
@@ -29,3 +30,29 @@
 .table tbody tr:nth-child(even){
     background: #f8f8f8!important;
 }
+
+.pageNum {
+    text-align: right;
+}
+
+th.sorted[data-order="-1"]::after {
+    content: "▼"
+}
+
+th.sorted[data-order="1"]::after {
+    content: "▲"
+}
+
+.hidden {
+    display: none;
+}
+
+.search input{
+    border-radius: 3px;
+    padding: 10px;
+    margin-bottom: 5px;
+    font-size: 14px;
+    display: block;
+    width: 100%;
+}
+
