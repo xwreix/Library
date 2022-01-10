@@ -3,13 +3,18 @@ const isEmpty = value => value === '';
 const isNotBetween = (length, max) => length > max;
 
 const showSuccess = (input) => {
-    const formField = input.parentElement;
-
-    input.classList.remove('error');
-    input.classList.add('success');
+    let formField = input.parentElement;
 
     const error = formField.querySelector('small');
     error.textContent = '';
+
+    if(input.classList.contains('authorName') ){
+        formField = input;
+    }
+
+    formField.classList.remove('error');
+    formField.classList.add('success');
+
 };
 
 const showError = (input, message) => {

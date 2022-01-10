@@ -1,9 +1,11 @@
 package com.lab.library.dao;
 
+import com.lab.library.dao.DBService.CheckElement;
 import com.lab.library.dao.DBService.GetFromDB;
 import com.lab.library.dao.DBService.InsertIntoDb;
 import com.lab.library.dao.beans.Book;
 import com.lab.library.dao.beans.Reader;
+import com.lab.library.dao.beans.Status;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.FileReader;
@@ -75,4 +77,13 @@ public class DBManager {
 
         return result;
     }
+
+    public Status checkReader(String email){
+        Connection connection = connectionPool.getConnection();
+        Status result = CheckElement.checkReader(email, connection);
+        connectionPool.releaseConnection(connection);
+
+        return result;
+    }
+
 }

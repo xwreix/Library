@@ -1,7 +1,11 @@
 package com.lab.library;
 
 import com.lab.library.dao.DBManager;
+import com.lab.library.dao.beans.Status;
 
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
@@ -22,7 +26,7 @@ public class FrontServlet extends HttpServlet {
 
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String referer = request.getRequestURI();
-        String url = "/main.jsp";
+        String url = null;
 
         switch (referer) {
             case ("/library/addReader"):
@@ -36,6 +40,31 @@ public class FrontServlet extends HttpServlet {
                 url = "/readerList.jsp";
                 request.setAttribute("readers", dbManager.selectFromReader());
                 break;
+            case ("/library/issueBook"):
+                url = "/issueBook.jsp";
+                break;
+            case ("/library/checkReader"):
+                Status status = dbManager.checkReader(request.getParameter("readerEmail"));
+                boolean valid = false;
+                String message = "";
+                if (status == Status.AVAIlABLE) {
+                    valid = true;
+                } else if (status == Status.NON_EXISTENT){
+                    message = "Читатель не существует";
+                } else if(status == Status.LOCKED){
+                    message = "Читатель не вернул все книги";
+                }
+
+                System.out.println(message);
+
+                JsonObjectBuilder objectBuilder = Json.createObjectBuilder()
+                        .add("valid", valid)
+                        .add("mess", message);
+                JsonObject jsonObject = objectBuilder.build();
+                response.setContentType("application/json");
+                response.setCharacterEncoding("UTF-8");
+                response.getWriter().write(jsonObject.toString());
+                break;
             case ("/library"):
                 url = "/main.jsp";
                 request.setAttribute("books", dbManager.selectFromBook());
@@ -43,10 +72,13 @@ public class FrontServlet extends HttpServlet {
 
         }
 
-        try {
-            getServletContext().getRequestDispatcher(url).forward(request, response);
-        } catch (ServletException e) {
-            e.printStackTrace();
+        if (url != null) {
+
+            try {
+                getServletContext().getRequestDispatcher(url).forward(request, response);
+            } catch (ServletException e) {
+                e.printStackTrace();
+            }
         }
     }
 

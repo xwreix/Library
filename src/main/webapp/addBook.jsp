@@ -54,13 +54,15 @@
 
         <div class="form-field authors">
             <h3>Авторы:</h3>
-            <label> Имя автора:
-                <input type="text" class="authorName" name="author1" id="author">
-                <small></small>
-            </label>
-            <label> Фото автора:
-                <input type="file" name="authorPhotos1[]" id="authorPhotos" multiple accept="image/*>">
-            </label>
+            <div class="author">
+                <label> Имя автора:
+                    <input type="text" class="authorName" name="author1" id="author">
+                    <small></small>
+                </label>
+                <label> Фото автора:
+                    <input type="file" name="authorPhotos1[]" id="authorPhotos" multiple accept="image/*>">
+                </label>
+            </div>
         </div>
 
         <div class="form-field add">

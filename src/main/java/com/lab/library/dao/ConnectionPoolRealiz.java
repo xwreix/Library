@@ -48,7 +48,6 @@ public class ConnectionPoolRealiz implements ConnectionPool {
 
     @Override
     public Connection getConnection() {
-        System.out.println("Connection pool" + connectionPool.size() + "used"+ usedConnections.size());
         Connection connection = connectionPool.remove(connectionPool.size() - 1);
         usedConnections.add(connection);
         return connection;
