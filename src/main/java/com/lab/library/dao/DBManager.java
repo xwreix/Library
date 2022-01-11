@@ -4,6 +4,7 @@ import com.lab.library.dao.DBService.CheckElement;
 import com.lab.library.dao.DBService.GetFromDB;
 import com.lab.library.dao.DBService.InsertIntoDb;
 import com.lab.library.dao.beans.Book;
+import com.lab.library.dao.beans.BookCopy;
 import com.lab.library.dao.beans.Reader;
 import com.lab.library.dao.beans.Status;
 
@@ -81,6 +82,30 @@ public class DBManager {
     public Status checkReader(String email){
         Connection connection = connectionPool.getConnection();
         Status result = CheckElement.checkReader(email, connection);
+        connectionPool.releaseConnection(connection);
+
+        return result;
+    }
+
+    public Status checkBook(String bookName){
+        Connection connection = connectionPool.getConnection();
+        Status result = CheckElement.checkBook(bookName, connection);
+        connectionPool.releaseConnection(connection);
+
+        return result;
+    }
+
+    public double getCost(String bookName){
+        Connection connection = connectionPool.getConnection();
+        double result = GetFromDB.getCost(bookName, connection);
+        connectionPool.releaseConnection(connection);
+
+        return result;
+    }
+
+    public List<BookCopy> addIssue(HttpServletRequest request){
+        Connection connection = connectionPool.getConnection();
+        List<BookCopy> result = InsertIntoDb.addIssue(request, connection);
         connectionPool.releaseConnection(connection);
 
         return result;

@@ -9,6 +9,8 @@
 <html>
 <head>
     <title>Выдать книгу</title>
+
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/multistep.css" type="text/css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/form.css" type="text/css">
 </head>
 <body>
@@ -16,45 +18,55 @@
     <form action="/library/issueBook" method="post" id="newIssue" class="form">
         <h1>Выдача книг</h1>
 
-        <div class="form-field">
-            <label for="email">Email читателя:</label>
-            <input type="text" name="email" id="email" autocomplete="off">
-            <small></small>
-        </div>
-
-        <div class="form-field">
-            <button type="button" name="checkReader" id="checkReader">Проверить</button>
-        </div>
-
-        <div class="form-field books">
-            <h3>Наименования книг:</h3>
-                <input type="text" class="bookNames" name="book1" id="book">
+        <div class="tab" id="1">
+            <div class="form-field">
+                <label for="email">Email читателя:</label>
+                <input type="text" name="email" id="email" autocomplete="off">
                 <small></small>
+            </div>
         </div>
 
-        <div class="form-field add">
-            <button type="button" name="addBook" id="addBook">Добавить ещё одну книгу</button>
+        <div class="tab" id="2">
+            <div class="form-field books">
+                <h3>Наименования книг:</h3>
+                <input type="text" class="bookName" name="book1" id="book" autocapitalize="">
+                <small></small>
+            </div>
+
+            <div class="form-field add">
+                <button type="button" name="addBook" id="addBook">Добавить ещё одну книгу</button>
+            </div>
         </div>
 
-        <div class="form-field">
-            <label for="preliminaryDate">Дата возврата книг:</label>
-            <input type="date" name="preliminaryDate" id="preliminaryDate" autocomplete="off">
-            <small></small>
+        <div class="tab" id="3">
+            <div class="form-field">
+                <label for="preliminaryDate">Дата возврата книг:</label>
+                <input type="date" name="preliminaryDate" id="preliminaryDate" autocomplete="off">
+                <small></small>
+            </div>
+
+            <div class="form-field">
+                <label for="cost">Предварительная стоимость: </label>
+                <input type="number" step="0.01" name="cost" id="cost" autocomplete="off">
+                <small></small>
+            </div>
+
+            <div class="form-field" hidden>
+                <input type="number" name="discount" id="discount" value="0">
+            </div>
+
         </div>
 
-        <div class="form-field">
-            <label for="cost">Предварительная стоимость: </label>
-            <input type="number" step="0.01" name="cost" id="cost" autocomplete="off">
-            <small></small>
+        <div class="navButtons">
+            <button type="button" id="nextBtn">Вперед</button>
+            <button type="button" id="prevBtn">Назад</button>
         </div>
 
-        <div class="form-field infoBook">
-            <button type="button" name="info" id="info">Info</button>
+        <div class="navCircles">
+            <span class="step"></span>
+            <span class="step"></span>
+            <span class="step"></span>
         </div>
-
-
-        <div id="tt"></div>
-
     </form>
 </div>
 

@@ -1,6 +1,7 @@
 package com.lab.library;
 
 import com.lab.library.dao.DBManager;
+import com.lab.library.dao.beans.BookCopy;
 import com.lab.library.dao.beans.Status;
 
 import javax.json.Json;
@@ -15,6 +16,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.List;
 
 @WebServlet(name = "frontServlet", value = "/library/*")
 @MultipartConfig
@@ -27,6 +29,9 @@ public class FrontServlet extends HttpServlet {
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String referer = request.getRequestURI();
         String url = null;
+        Status status;
+        boolean valid = false;
+        String message = "";
 
         switch (referer) {
             case ("/library/addReader"):
@@ -44,9 +49,7 @@ public class FrontServlet extends HttpServlet {
                 url = "/issueBook.jsp";
                 break;
             case ("/library/checkReader"):
-                Status status = dbManager.checkReader(request.getParameter("readerEmail"));
-                boolean valid = false;
-                String message = "";
+                status = dbManager.checkReader(request.getParameter("readerEmail"));
                 if (status == Status.AVAIlABLE) {
                     valid = true;
                 } else if (status == Status.NON_EXISTENT){
@@ -54,22 +57,27 @@ public class FrontServlet extends HttpServlet {
                 } else if(status == Status.LOCKED){
                     message = "Читатель не вернул все книги";
                 }
-
-                System.out.println(message);
-
-                JsonObjectBuilder objectBuilder = Json.createObjectBuilder()
-                        .add("valid", valid)
-                        .add("mess", message);
-                JsonObject jsonObject = objectBuilder.build();
-                response.setContentType("application/json");
-                response.setCharacterEncoding("UTF-8");
-                response.getWriter().write(jsonObject.toString());
+                sendJSON(valid, message, response);
+                break;
+            case ("/library/checkBook"):
+                status = dbManager.checkBook(request.getParameter("bookName"));
+                if(status==Status.AVAIlABLE){
+                    valid = true;
+                } else if(status == Status.NON_EXISTENT){
+                    message = "Такой книги не существует";
+                } else if(status == Status.LOCKED){
+                    message = "В наличии нет доступных экзмепляров";
+                }
+                sendJSON(valid, message, response);
+                break;
+            case ("/library/getCost"):
+                double cost = dbManager.getCost(request.getParameter("bookName"));
+                sendJSON(true, String.valueOf(cost), response);
                 break;
             case ("/library"):
                 url = "/main.jsp";
                 request.setAttribute("books", dbManager.selectFromBook());
                 break;
-
         }
 
         if (url != null) {
@@ -112,6 +120,11 @@ public class FrontServlet extends HttpServlet {
                     }
                     getServletContext().getRequestDispatcher("/result.jsp").forward(request, response);
                     break;
+                case "/library/issueBook":
+                    List<BookCopy> givenBooks = dbManager.addIssue(request);
+                    request.setAttribute("givenBooks", givenBooks);
+                    getServletContext().getRequestDispatcher("/givenBooks.jsp").forward(request, response);
+                    break;
                 default:
                     getServletContext().getRequestDispatcher("/result.jsp").forward(request, response);
             }
@@ -120,5 +133,19 @@ public class FrontServlet extends HttpServlet {
     }
 
     public void destroy() {
+    }
+
+    private void sendJSON(boolean valid, String message, HttpServletResponse response){
+        JsonObjectBuilder objectBuilder = Json.createObjectBuilder()
+                .add("valid", valid)
+                .add("value", message);
+        JsonObject jsonObject = objectBuilder.build();
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        try {
+            response.getWriter().write(jsonObject.toString());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

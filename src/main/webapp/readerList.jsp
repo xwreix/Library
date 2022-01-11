@@ -28,7 +28,6 @@
             <th>Дата рождения</th>
             <th>Адрес</th>
             <th>Электронная почта</th>
-            <th class="hidden">id</th>
         </tr>
         </thead>
         <tbody>
@@ -51,8 +50,6 @@
                 </td>
 
                 <td>${element.email}</td>
-
-                <td class="hidden">${element.id}</td>
             </tr>
         </c:forEach>
         </tbody>

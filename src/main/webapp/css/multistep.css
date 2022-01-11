@@ -1,0 +1,35 @@
+.navCircles {
+    margin-top: 40px;
+    text-align: center;
+}
+
+.tab {
+    display: none;
+}
+
+.step {
+    height: 15px;
+    width: 15px;
+    margin: 0 2px;
+    background-color: #F0E68C;
+    border: none;
+    border-radius: 50%;
+    display: inline-block;
+    opacity: 0.5;
+}
+
+.step.active {
+    opacity: 1;
+}
+
+.navButtons button {
+    background-color: #F0E68C;
+    color:  #000000;
+    border: none;
+    float:right;
+    padding: 10px 24px;
+    text-align: center;
+    font-size: 14px;
+    cursor: pointer;
+    margin-left: 7px;
+}

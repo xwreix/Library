@@ -8,7 +8,7 @@ const showSuccess = (input) => {
     const error = formField.querySelector('small');
     error.textContent = '';
 
-    if(input.classList.contains('authorName') ){
+    if (input.classList.contains('authorName') || input.classList.contains('bookName')) {
         formField = input;
     }
 
@@ -18,20 +18,24 @@ const showSuccess = (input) => {
 };
 
 const showError = (input, message) => {
-    const formField = input.parentElement;
-
-    formField.classList.remove('success');
-    formField.classList.add('error');
+    let formField = input.parentElement;
 
     const error = formField.querySelector('small');
     error.textContent = message;
+
+    if (input.classList.contains('authorName') || input.classList.contains('bookName')) {
+        formField = input;
+    }
+
+    formField.classList.remove('success');
+    formField.classList.add('error');
 };
 
 const checkRequired = (param) => {
     let valid = false,
         val = param.value.trim();
 
-    if(isEmpty(val)) {
+    if (isEmpty(val)) {
         showError(param, "Поле обязательно к заполнению");
     } else {
         showSuccess(param);
@@ -45,7 +49,7 @@ const checkLength = (param, max) => {
     let valid = false,
         val = param.value.trim();
 
-    if(isNotBetween(val.length, max)){
+    if (isNotBetween(val.length, max)) {
         showError(param, "Введено слишком длинное значение");
     } else {
         showSuccess(param);

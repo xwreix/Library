@@ -117,4 +117,19 @@ public class GetFromDB {
         return readers;
     }
 
+    public static double getCost(String bookName, Connection connection){
+        double result = 0;
+        String SQL = "SELECT priceForDay FROM book WHERE nameInRus = ?";
+        try {
+            PreparedStatement statement = connection.prepareStatement(SQL);
+            statement.setString(1, bookName);
+            ResultSet resultSet = statement.executeQuery();
+            resultSet.next();
+            result = resultSet.getDouble(1);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return result;
+    }
 }

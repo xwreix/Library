@@ -26,7 +26,6 @@
             <th datatype="number">Год выпуска</th>
             <th datatype="number">Общее количество экземпляров</th>
             <th datatype="number">Количество доступных к выдаче экзмепляров</th>
-            <th class="hidden">id</th>
         </tr>
         </thead>
         <tbody>
@@ -52,7 +51,6 @@
                 </td>
                 <td>${element.totalAmount}</td>
                 <td>${element.availableAmount}</td>
-                <td class="hidden">${element.id}</td>
             </tr>
         </c:forEach>
         </tbody>
