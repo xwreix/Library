@@ -1,5 +1,6 @@
 package com.lab.library;
 
+import com.google.gson.Gson;
 import com.lab.library.dao.DBManager;
 import com.lab.library.dao.beans.BookCopy;
 import com.lab.library.dao.beans.Status;
@@ -48,24 +49,27 @@ public class FrontServlet extends HttpServlet {
             case ("/library/issueBook"):
                 url = "/issueBook.jsp";
                 break;
-            case ("/library/checkReader"):
+            case ("/library/returnBook"):
+                url = "/returnBook.jsp";
+                break;
+            case ("/library/checkReaderExistence"):
                 status = dbManager.checkReader(request.getParameter("readerEmail"));
                 if (status == Status.AVAIlABLE) {
                     valid = true;
-                } else if (status == Status.NON_EXISTENT){
+                } else if (status == Status.NON_EXISTENT) {
                     message = "Читатель не существует";
-                } else if(status == Status.LOCKED){
+                } else if (status == Status.LOCKED) {
                     message = "Читатель не вернул все книги";
                 }
                 sendJSON(valid, message, response);
                 break;
             case ("/library/checkBook"):
                 status = dbManager.checkBook(request.getParameter("bookName"));
-                if(status==Status.AVAIlABLE){
+                if (status == Status.AVAIlABLE) {
                     valid = true;
-                } else if(status == Status.NON_EXISTENT){
+                } else if (status == Status.NON_EXISTENT) {
                     message = "Такой книги не существует";
-                } else if(status == Status.LOCKED){
+                } else if (status == Status.LOCKED) {
                     message = "В наличии нет доступных экзмепляров";
                 }
                 sendJSON(valid, message, response);
@@ -73,6 +77,14 @@ public class FrontServlet extends HttpServlet {
             case ("/library/getCost"):
                 double cost = dbManager.getCost(request.getParameter("bookName"));
                 sendJSON(true, String.valueOf(cost), response);
+                break;
+            case ("/library/countGivenBooks"):
+                int amount = dbManager.countReaderBooks(request.getParameter("readerEmail"));
+                sendJSON(true, String.valueOf(amount), response);
+                break;
+            case ("/library/getGivenBooks"):
+                List<BookCopy> books = dbManager.getReaderBooks(request.getParameter("readerEmail"));
+                sendArrayJSON(books, response);
                 break;
             case ("/library"):
                 url = "/main.jsp";
@@ -86,6 +98,7 @@ public class FrontServlet extends HttpServlet {
                 getServletContext().getRequestDispatcher(url).forward(request, response);
             } catch (ServletException e) {
                 e.printStackTrace();
+                //TODO log
             }
         }
     }
@@ -100,6 +113,7 @@ public class FrontServlet extends HttpServlet {
             referer = new URI(request.getHeader("referer")).getPath();
         } catch (URISyntaxException e) {
             e.printStackTrace();
+            //TODO log
         }
 
         if (referer != null) {
@@ -125,6 +139,14 @@ public class FrontServlet extends HttpServlet {
                     request.setAttribute("givenBooks", givenBooks);
                     getServletContext().getRequestDispatcher("/givenBooks.jsp").forward(request, response);
                     break;
+                case "/library/returnBook":
+                    if (dbManager.returnBook(request)) {
+                        request.setAttribute("result", "Возврат книг проведён успешно");
+                    } else {
+                        request.setAttribute("result", "Не удалось провести возврат книг");
+                    }
+                    getServletContext().getRequestDispatcher("/result.jsp").forward(request, response);
+                    break;
                 default:
                     getServletContext().getRequestDispatcher("/result.jsp").forward(request, response);
             }
@@ -135,7 +157,7 @@ public class FrontServlet extends HttpServlet {
     public void destroy() {
     }
 
-    private void sendJSON(boolean valid, String message, HttpServletResponse response){
+    private void sendJSON(boolean valid, String message, HttpServletResponse response) {
         JsonObjectBuilder objectBuilder = Json.createObjectBuilder()
                 .add("valid", valid)
                 .add("value", message);
@@ -146,6 +168,19 @@ public class FrontServlet extends HttpServlet {
             response.getWriter().write(jsonObject.toString());
         } catch (IOException e) {
             e.printStackTrace();
+            //TODO log
+        }
+    }
+
+    private void sendArrayJSON(List<BookCopy> books, HttpServletResponse response) {
+        String json = new Gson().toJson(books);
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        try {
+            response.getWriter().write(json);
+        } catch (IOException e) {
+            e.printStackTrace();
+            //TODO log
         }
     }
 }

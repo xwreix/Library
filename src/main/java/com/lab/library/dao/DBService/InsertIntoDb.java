@@ -43,7 +43,6 @@ public class InsertIntoDb {
             //TODO log
             e.printStackTrace();
             return false;
-
         }
 
         return true;
@@ -64,23 +63,22 @@ public class InsertIntoDb {
             addBookService.insertIntoBookCopy(id);
 
             connection.commit();
-        } catch (SQLException e) {
+        } catch (SQLException | ServletException | IOException e) {
             try {
                 connection.rollback();
             } catch (SQLException ex) {
                 ex.printStackTrace();
+                //TODO log
             }
             //TODO log
             e.printStackTrace();
             return false;
-        } catch (ServletException | IOException e) {
-            e.printStackTrace();
         }
 
         return true;
     }
 
-    public static List<BookCopy> addIssue(HttpServletRequest request, Connection connection){
+    public static List<BookCopy> addIssue(HttpServletRequest request, Connection connection) {
         Enumeration<String> params = request.getParameterNames();
         List<String> books = new ArrayList<>();
         while (params.hasMoreElements()) {
@@ -89,6 +87,7 @@ public class InsertIntoDb {
                 books.add(request.getParameter(el));
             }
         }
+
 
         List<BookCopy> givenBooks = new ArrayList<>();
 
@@ -118,7 +117,7 @@ public class InsertIntoDb {
                     "LIMIT 1";
             PreparedStatement idStatement;
 
-            for(String book: books){
+            for (String book : books) {
                 idStatement = connection.prepareStatement(getIdBook);
                 idStatement.setString(1, book);
                 resultSet = idStatement.executeQuery();
@@ -145,9 +144,58 @@ public class InsertIntoDb {
                 ex.printStackTrace();
             }
             e.printStackTrace();
+
         }
 
         return givenBooks;
+    }
+
+    public static boolean returnBook(HttpServletRequest request, Connection connection) {
+        String SQL;
+        try {
+            connection.setAutoCommit(false);
+
+            SQL = "SELECT id FROM reader WHERE email = ?";
+            PreparedStatement statement = connection.prepareStatement(SQL);
+            statement.setString(1, request.getParameter("email"));
+            ResultSet resultSet = statement.executeQuery();
+            resultSet.next();
+            int readerId = resultSet.getInt(1);
+
+            Enumeration<String> params = request.getParameterNames();
+            List<String> booksParams = new ArrayList<>();
+            while (params.hasMoreElements()) {
+                String el = params.nextElement();
+                if (Pattern.matches("book[0-9]*", el)) {
+                    booksParams.add(el);
+                }
+            }
+            ReturnBookService returnBookService = new ReturnBookService(request, connection);
+
+            for (String book : booksParams) {
+                String paramId = book.substring(4);
+                String bookName = request.getParameter(book);
+                int copyId = returnBookService.getCopyId(readerId, bookName);
+                returnBookService.insertDamage(copyId, paramId);
+                returnBookService.insertDamagePhotos(copyId, paramId);
+                returnBookService.updateIssue(copyId, readerId, paramId);
+            }
+
+
+            connection.commit();
+        } catch (SQLException | ServletException | IOException e) {
+            try {
+                connection.rollback();
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+                //TODO log
+            }
+            e.printStackTrace();
+            //TODO log
+            return false;
+        }
+
+        return true;
     }
 
     private static String setNull(String param) {
@@ -159,28 +207,3 @@ public class InsertIntoDb {
 
 }
 
-//   Collection<Part> filePart = request.getParts();
-//                try {
-//                    PreparedStatement ps = connectionPool.getConnection().prepareStatement("INSERT INTO images(img, id) VALUES (?, ?)");
-//                    ps.setBinaryStream(1, fileContent);
-//                    ps.setInt(2, 1);
-//                    ps.executeUpdate();
-//
-//                    ps = connectionPool.getConnection().prepareStatement("SELECT img FROM images WHERE id =?");
-//                    ps.setInt(1, 12);
-//                    ResultSet rs = ps.executeQuery();
-//                    while (rs.next()) {
-//                        byte[] imgBytes = rs.getBytes(12);
-//                        response.setContentType("image/jpg");
-//                        response.getOutputStream().write(imgBytes);
-//                        response.getOutputStream().flush();
-//                        response.getOutputStream().close();
-//                    }
-//                    rs.close();
-//                    ps.close();
-//                } catch (SQLException e) {
-//                    e.printStackTrace();
-//                }
-//               break;
-
-//InsertIntoDb.insertImage(request);

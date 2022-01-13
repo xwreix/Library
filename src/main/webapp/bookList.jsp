@@ -1,16 +1,10 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<%--
-  Created by IntelliJ IDEA.
-  User: xwreix
-  Date: 06.01.2022
-  Time: 15:37
-  To change this template use File | Settings | File Templates.
---%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <html>
 <head>
     <title>Список книг</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/table.css" type="text/css">
+    <link rel="icon" href="${pageContext.request.contextPath}/images/icon.png" type="text/x-icon">
 </head>
 <body>
 <div class="container">

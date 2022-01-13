@@ -49,8 +49,10 @@ public class CheckElement {
                 connection.rollback();
             } catch (SQLException ex) {
                 ex.printStackTrace();
+                //TODO log
             }
             e.printStackTrace();
+            //TODO log
         }
 
         return result;
@@ -70,11 +72,11 @@ public class CheckElement {
             ResultSet resultSet = statement.executeQuery();
 
             int totalAmount = 0;
-            while(resultSet.next()){
+            while (resultSet.next()) {
                 totalAmount = resultSet.getInt(1);
             }
 
-            if(totalAmount == 0) {
+            if (totalAmount == 0) {
                 status = Status.NON_EXISTENT;
             } else {
                 SQL = "SELECT COUNT (*) FROM bookcopy\n" +
@@ -86,11 +88,11 @@ public class CheckElement {
                 resultSet = statement.executeQuery();
 
                 int availableAmount = totalAmount;
-                while(resultSet.next()){
+                while (resultSet.next()) {
                     availableAmount -= resultSet.getInt(1);
                 }
 
-                if(availableAmount > 0){
+                if (availableAmount > 0) {
                     status = Status.AVAIlABLE;
                 } else {
                     status = Status.LOCKED;
@@ -103,10 +105,34 @@ public class CheckElement {
                 connection.rollback();
             } catch (SQLException ex) {
                 ex.printStackTrace();
+                //TODO log
             }
             e.printStackTrace();
+            //TODO log
         }
 
         return status;
+    }
+
+    public static int countGivenBooks(String email, Connection connection) {
+        int result = 0;
+        try {
+            String SQL = "SELECT COUNT(*) FROM issue\n" +
+                    "JOIN reader ON reader.id = issue.readerid\n" +
+                    "JOIN bookcopy ON bookcopy.id = issue.bookcopyid\n" +
+                    "JOIN book ON book.id = bookcopy.bookid\n" +
+                    "WHERE reader.email = ? AND returndate IS NULL";
+            PreparedStatement statement = connection.prepareStatement(SQL);
+            statement.setString(1, email);
+            ResultSet resultSet = statement.executeQuery();
+            resultSet.next();
+            result = resultSet.getInt(1);
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            //TODO log
+        }
+
+        return result;
     }
 }

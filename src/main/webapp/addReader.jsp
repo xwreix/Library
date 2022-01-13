@@ -1,17 +1,13 @@
-<%--
-  Created by IntelliJ IDEA.
-  User: xwreix
-  Date: 25.12.2021
-  Time: 18:42
-  To change this template use File | Settings | File Templates.
---%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <html>
 <head>
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/form.css" type="text/css">
     <title>Новый читатель</title>
+    <link rel="icon" href="${pageContext.request.contextPath}/images/icon.png" type="text/x-icon">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/form.css" type="text/css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/reset.css" type="text/css">
 </head>
 <body>
+<jsp:include page="header.jsp"/>
 <div class="container">
     <form action="/library/addReader" method="post" id="newReader" class="form" enctype="multipart/form-data">
         <h1>Регистрация нового читателя</h1>

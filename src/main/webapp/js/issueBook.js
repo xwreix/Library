@@ -9,6 +9,11 @@ $(document).ready(function () {
     const add_button = $(".add");
     let bookId = 2;
     const form = document.getElementById("newIssue");
+    const next = $('#nextBtn');
+    const prev = $('#prevBtn');
+    let currentTab = 0;
+
+    showTab(currentTab);
 
     form.addEventListener('submit', function (event) {
         event.preventDefault();
@@ -29,75 +34,19 @@ $(document).ready(function () {
         $(this).parent('div').remove();
     });
 
-    let currentTab = 0;
-    showTab(currentTab);
-
-    function showTab(n) {
-        let tabs = document.getElementsByClassName("tab");
-        tabs[n].style.display = "block";
-
-        if (n === 0) {
-            document.getElementById("prevBtn").style.display = "none";
-        } else {
-            document.getElementById("prevBtn").style.display = "inline";
-        }
-
-        if (n === (tabs.length - 1)) {
-            document.getElementById("nextBtn").innerHTML = "Отправить";
-        } else {
-            document.getElementById("nextBtn").innerHTML = "Вперед";
-        }
-
-        fixStepIndicator(n);
-
-    }
-
-    function fixStepIndicator(n) {
-        let tabs = document.getElementsByClassName("step");
-        for (let i = 0; i < tabs.length; i++) {
-            tabs[i].className = tabs[i].className.replace(" active", "");
-        }
-        tabs[n].className += " active";
-    }
-
-
-    const next = document.getElementById('nextBtn');
-    const prev = document.getElementById('prevBtn');
-
-    next.addEventListener('click', function () {
-        let tabs = document.getElementsByClassName("tab");
-        let id = tabs[currentTab].getAttribute('id');
-        if (id == 1) {
+    $(next).click(function () {
+        if (currentTab == 0) {
             validateReader();
-        } else if (id == 2) {
+        } else if (currentTab == 1) {
             validateBooks();
         } else {
             form.submit();
         }
     });
 
-    prev.addEventListener('click', function () {
-        swipePrev();
+    $(prev).click(function () {
+        currentTab = swipePrev(currentTab);
     });
-
-    function swipeNext(valid) {
-        let tabs = document.getElementsByClassName("tab");
-        if (!valid) return false;
-
-        tabs[currentTab].style.display = "none";
-        currentTab++;
-        if (currentTab >= tabs.length) {
-            form.submit();
-        }
-        showTab(currentTab);
-    }
-
-    function swipePrev() {
-        let tabs = document.getElementsByClassName("tab");
-        tabs[currentTab].style.display = "none";
-        currentTab--;
-        showTab(currentTab)
-    }
 
     function validateReader() {
         const email = document.getElementById('email');
@@ -106,7 +55,7 @@ $(document).ready(function () {
         const value = email.value.trim();
 
         if (!isEmpty(value)) {
-            $.get("/library/checkReader", {readerEmail: value}, function (responseJson) {
+            $.get("/library/checkReaderExistence", {readerEmail: value}, function (responseJson) {
                 valid = responseJson['valid'];
                 message = responseJson['value'];
 
@@ -115,7 +64,7 @@ $(document).ready(function () {
                 } else {
                     showError(email, message);
                 }
-                swipeNext(valid);
+                currentTab = swipeNext(valid, currentTab, form);
             });
         } else {
             showError(email, "Поле обязательно к заполнению");
@@ -165,7 +114,7 @@ $(document).ready(function () {
         if (validated == bookAmount) {
             validated = 0;
             calculatePrice();
-            swipeNext(true);
+            currentTab = swipeNext(true, currentTab, form);
         }
     }
 
@@ -188,12 +137,9 @@ $(document).ready(function () {
                     } else if (amount > 4) {
                         discount = 15;
                     }
-                    console.log("d"+discount+"t"+total);
                     total -= total / 100 * discount;
-                    console.log(total);
                     cost.setAttribute('value', total);
                     document.getElementById('discount').setAttribute('value', discount + "");
-                    console.log(document.getElementById('discount').value)
 
                 }
             });

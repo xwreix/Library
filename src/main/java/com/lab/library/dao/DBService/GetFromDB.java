@@ -1,11 +1,12 @@
 package com.lab.library.dao.DBService;
 
 import com.lab.library.dao.beans.Book;
+import com.lab.library.dao.beans.BookCopy;
 import com.lab.library.dao.beans.Reader;
 
 import java.sql.*;
-import java.util.*;
 import java.util.Date;
+import java.util.*;
 
 public class GetFromDB {
 
@@ -84,8 +85,10 @@ public class GetFromDB {
                 connection.rollback();
             } catch (SQLException ex) {
                 ex.printStackTrace();
+                //TODO log
             }
             e.printStackTrace();
+            //TODO log
         }
 
         Collections.sort(books);
@@ -112,6 +115,7 @@ public class GetFromDB {
             }
         } catch (SQLException e) {
             e.printStackTrace();
+            //TODO log
         }
 
         return readers;
@@ -128,6 +132,37 @@ public class GetFromDB {
             result = resultSet.getDouble(1);
         } catch (SQLException e) {
             e.printStackTrace();
+            //TODO log
+        }
+
+        return result;
+    }
+
+    public static List<BookCopy> getReaderBooks(String email, Connection connection){
+        List<BookCopy> result = new ArrayList<>();
+
+        try {
+            String SQL ="SELECT preliminarydate, discount, book.nameinrus, book.priceforday FROM issue\n" +
+                    "JOIN reader ON reader.id = issue.readerid\n" +
+                    "JOIN bookcopy ON bookcopy.id = issue.bookcopyid\n" +
+                    "JOIN book ON book.id = bookcopy.bookid\n" +
+                    "WHERE reader.email = ? AND returndate IS NULL";
+            PreparedStatement statement = connection.prepareStatement(SQL);
+            statement.setString(1, email);
+            ResultSet resultSet = statement.executeQuery();
+
+            while(resultSet.next()){
+                String date = String.valueOf(resultSet.getDate("preliminaryDate"));
+                int discount = resultSet.getInt("discount");
+                String bookName = resultSet.getString(3);
+                double priceForDay = resultSet.getDouble(4);
+
+                result.add(new BookCopy(bookName, discount, date, priceForDay));
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            //TODO log
         }
 
         return result;

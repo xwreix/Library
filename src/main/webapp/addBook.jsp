@@ -1,10 +1,3 @@
-<%--
-  Created by IntelliJ IDEA.
-  User: xwreix
-  Date: 29.12.2021
-  Time: 18:05
-  To change this template use File | Settings | File Templates.
---%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <html>
@@ -12,8 +5,10 @@
     <title>Новая книга</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/reset.css" type="text/css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/form.css" type="text/css">
+    <link rel="icon" href="${pageContext.request.contextPath}/images/icon.png" type="text/x-icon">
 </head>
 <body>
+<jsp:include page="header.jsp"/>
 <div class="container">
     <form action="/library/addBook" method="post" id="newBook" class="form" enctype="multipart/form-data">
         <h1>Регистрация новой книги</h1>

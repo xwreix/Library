@@ -1,7 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <html>
 <head>
-    <title>Выдать книгу</title>
+    <title>Возврат книг</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/multistep.css" type="text/css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/form.css" type="text/css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/reset.css" type="text/css">
@@ -10,8 +10,8 @@
 <body>
 <jsp:include page="header.jsp"/>
 <div class="container">
-    <form action="/library/issueBook" method="post" id="newIssue" class="form">
-        <h1>Выдача книг</h1>
+    <form action="/library/returnBook" method="post" id="returnBook" class="form" enctype="multipart/form-data">
+        <h1>Возврат книг</h1>
 
         <div class="tab" id="1">
             <div class="form-field">
@@ -23,10 +23,17 @@
 
         <div class="tab" id="2">
             <div class="form-field books">
-                <h3>Наименования книг:</h3>
-                <div>
+                <div class="copy">
+                    <label for="book">Наименование книги:</label>
                     <input type="text" class="bookName" name="book1" id="book" autocapitalize="on">
                     <small></small>
+
+                    <label for="damage">Нарушения:</label>
+                    <input type="text" class="damage" name="damage1" id="damage">
+                    <input type="file" name="damagePhotos1[]" id="damagePhotos" multiple accept="image/*>">
+
+                    <label for="rating">Рейтинг:</label>
+                    <input type="number" class="rating" name="rating1" id="rating" max="10">
                 </div>
             </div>
 
@@ -37,21 +44,16 @@
 
         <div class="tab" id="3">
             <div class="form-field">
-                <label for="preliminaryDate">Дата возврата книг:</label>
-                <input type="date" name="preliminaryDate" id="preliminaryDate" autocomplete="off">
+                <label for="returnDate">Дата возврата:</label>
+                <input type="date" name="returnDate" id="returnDate" autocomplete="off">
                 <small></small>
             </div>
 
             <div class="form-field">
-                <label for="cost">Предварительная стоимость: </label>
+                <label for="cost">Стоимость: </label>
                 <input type="number" step="0.01" name="cost" id="cost" autocomplete="off">
                 <small></small>
             </div>
-
-            <div class="form-field" hidden>
-                <input type="number" name="discount" id="discount" value="0">
-            </div>
-
         </div>
 
         <div class="navButtons">
@@ -70,7 +72,7 @@
 
 <script src="http://code.jquery.com/jquery-1.11.0.js"></script>
 <script src="${pageContext.request.contextPath}/js/validation.js"></script>
-<script src="${pageContext.request.contextPath}/js/issueBook.js"></script>
+<script src="${pageContext.request.contextPath}/js/returnBook.js"></script>
 <script src="${pageContext.request.contextPath}/js/multistep.js"></script>
 </body>
 </html>

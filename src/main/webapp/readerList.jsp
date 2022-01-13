@@ -1,20 +1,15 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<%--
-  Created by IntelliJ IDEA.
-  User: xwreix
-  Date: 09.01.2022
-  Time: 14:55
-  To change this template use File | Settings | File Templates.
---%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <html>
 <head>
     <title>Список читателей</title>
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/table.css" type="text/css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css" type="text/css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/reset.css" type="text/css">
+    <link rel="icon" href="${pageContext.request.contextPath}/images/icon.png" type="text/x-icon">
 </head>
 <body>
-
+<jsp:include page="header.jsp"/>
 <div class="container">
     <div class="search">
         <input type="text" placeholder="Введите фамилию" id="search" onkeyup="tableSearch()"

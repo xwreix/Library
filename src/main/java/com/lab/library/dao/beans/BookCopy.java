@@ -5,12 +5,21 @@ public class BookCopy {
     private String name;
     private String damage;
     private int discount;
+    private String preliminaryDate;
+    private double priceForDay;
 
     public BookCopy(int id, String name, String damage, int discount) {
         this.id = id;
         this.name = name;
         this.damage = damage;
         this.discount = discount;
+    }
+
+    public BookCopy(String name, int discount, String preliminaryDate, double priceForDay) {
+        this.name = name;
+        this.discount = discount;
+        this.preliminaryDate = preliminaryDate;
+        this.priceForDay = priceForDay;
     }
 
     public int getId() {
@@ -45,13 +54,19 @@ public class BookCopy {
         this.discount = discount;
     }
 
-    @Override
-    public String toString() {
-        return "BookCopy{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", damage='" + damage + '\'' +
-                ", discount=" + discount +
-                '}';
+    public String getPreliminaryDate() {
+        return preliminaryDate;
+    }
+
+    public void setPreliminaryDate(String preliminaryDate) {
+        this.preliminaryDate = preliminaryDate;
+    }
+
+    public double getPriceForDay() {
+        return priceForDay;
+    }
+
+    public void setPriceForDay(double priceForDay) {
+        this.priceForDay = priceForDay;
     }
 }

@@ -20,6 +20,11 @@ body {
     margin: 0;
 }
 
+#header {
+    position: fixed;
+    top: 0;
+}
+
 .container {
     background-color: #fff;
     padding: 1em;
@@ -74,6 +79,12 @@ body {
 
 .form-field input:focus {
     outline: none;
+}
+
+div .copy {
+    border: solid 3px #777;
+    margin-bottom: 10px;
+    padding: 5px;
 }
 
 .form-field.error input {

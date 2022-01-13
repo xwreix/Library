@@ -1,17 +1,13 @@
-<%--
-  Created by IntelliJ IDEA.
-  User: xwreix
-  Date: 30.12.2021
-  Time: 14:31
-  To change this template use File | Settings | File Templates.
---%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <html>
 <head>
     <title>Результат</title>
+    <link rel="icon" href="${pageContext.request.contextPath}/images/icon.png" type="text/x-icon">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css" type="text/css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/css/reset.css" type="text/css">
 </head>
 <body>
+<jsp:include page="header.jsp"/>
 <h1>${result}</h1>
-<a href="/library">Перейти на главную</a>
 </body>
 </html>

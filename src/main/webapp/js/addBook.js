@@ -16,6 +16,10 @@ $(document).ready(function () {
     const covers = document.querySelector('#covers');
     const year = document.querySelector('#publYear');
 
+    let wrapper = $(".authors");
+    const add_button = $(".add");
+    let authorId = 2;
+
     form.addEventListener('submit', function (event) {
         event.preventDefault();
 
@@ -24,11 +28,6 @@ $(document).ready(function () {
         }
 
     });
-
-
-    let wrapper = $(".authors");
-    const add_button = $(".add");
-    let authorId = 2;
 
     $(add_button).click(function () {
         $(wrapper).append('<div class="author"> <label> Имя автора:\n' +

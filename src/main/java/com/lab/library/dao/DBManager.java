@@ -3,10 +3,7 @@ package com.lab.library.dao;
 import com.lab.library.dao.DBService.CheckElement;
 import com.lab.library.dao.DBService.GetFromDB;
 import com.lab.library.dao.DBService.InsertIntoDb;
-import com.lab.library.dao.beans.Book;
-import com.lab.library.dao.beans.BookCopy;
-import com.lab.library.dao.beans.Reader;
-import com.lab.library.dao.beans.Status;
+import com.lab.library.dao.beans.*;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.FileReader;
@@ -106,6 +103,30 @@ public class DBManager {
     public List<BookCopy> addIssue(HttpServletRequest request){
         Connection connection = connectionPool.getConnection();
         List<BookCopy> result = InsertIntoDb.addIssue(request, connection);
+        connectionPool.releaseConnection(connection);
+
+        return result;
+    }
+
+    public int countReaderBooks(String email){
+        Connection connection = connectionPool.getConnection();
+        int result = CheckElement.countGivenBooks(email, connection);
+        connectionPool.releaseConnection(connection);
+
+        return result;
+    }
+
+    public List<BookCopy> getReaderBooks(String email){
+        Connection connection = connectionPool.getConnection();
+        List<BookCopy> result = GetFromDB.getReaderBooks(email, connection);
+        connectionPool.releaseConnection(connection);
+
+        return result;
+    }
+
+    public boolean returnBook(HttpServletRequest request){
+        Connection connection = connectionPool.getConnection();
+        boolean result = InsertIntoDb.returnBook(request, connection);
         connectionPool.releaseConnection(connection);
 
         return result;

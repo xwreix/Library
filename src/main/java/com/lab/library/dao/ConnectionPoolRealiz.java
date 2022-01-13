@@ -66,7 +66,7 @@ public class ConnectionPoolRealiz implements ConnectionPool {
             Class.forName("org.postgresql.Driver");
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
-            System.out.println("Driver not found");
+            //TODO log
         }
         return DriverManager.getConnection(url, user, password);
     }
