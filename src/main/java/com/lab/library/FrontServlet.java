@@ -1,9 +1,14 @@
 package com.lab.library;
 
 import com.google.gson.Gson;
-import com.lab.library.dao.DBManager;
-import com.lab.library.dao.beans.BookCopy;
-import com.lab.library.dao.beans.Status;
+import com.lab.library.beans.Book;
+import com.lab.library.beans.BookCopy;
+import com.lab.library.beans.Reader;
+import com.lab.library.beans.Status;
+import com.lab.library.dao.ConnectionPool;
+import com.lab.library.service.BookService;
+import com.lab.library.service.ReaderService;
+import com.lab.library.service.RequestHandler;
 
 import javax.json.Json;
 import javax.json.JsonObject;
@@ -17,14 +22,30 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.sql.SQLException;
 import java.util.List;
+import java.util.logging.FileHandler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @WebServlet(name = "frontServlet", value = "/library/*")
 @MultipartConfig
 public class FrontServlet extends HttpServlet {
-    DBManager dbManager = new DBManager();
+    Logger logger = Logger.getLogger(FrontServlet.class.getName());
+    ReaderService readerService = new ReaderService();
+    BookService bookService = new BookService();
+    //manager dbManager = new manager();
 
     public void init() {
+        try {
+            logger.addHandler(new FileHandler("libraryLog"));
+            ConnectionPool.create();
+
+        } catch (IOException e) {
+            logger.log(Level.SEVERE, "Log exception ", e);
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Creating connection exception ", e);
+        }
     }
 
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -40,11 +61,11 @@ public class FrontServlet extends HttpServlet {
                 break;
             case ("/library/addBook"):
                 url = "/addBook.jsp";
-                request.setAttribute("genres", dbManager.selectFromGenres());
+                request.setAttribute("genres", bookService.selectGenres());
                 break;
             case ("/library/readerList"):
                 url = "/readerList.jsp";
-                request.setAttribute("readers", dbManager.selectFromReader());
+                request.setAttribute("readers", readerService.selectReaders());
                 break;
             case ("/library/issueBook"):
                 url = "/issueBook.jsp";
@@ -53,7 +74,7 @@ public class FrontServlet extends HttpServlet {
                 url = "/returnBook.jsp";
                 break;
             case ("/library/checkReaderExistence"):
-                status = dbManager.checkReader(request.getParameter("readerEmail"));
+                status = readerService.checkReader(request.getParameter("readerEmail"));
                 if (status == Status.AVAIlABLE) {
                     valid = true;
                 } else if (status == Status.NON_EXISTENT) {
@@ -64,7 +85,7 @@ public class FrontServlet extends HttpServlet {
                 sendJSON(valid, message, response);
                 break;
             case ("/library/checkBook"):
-                status = dbManager.checkBook(request.getParameter("bookName"));
+                status = bookService.checkBook(request.getParameter("bookName"));
                 if (status == Status.AVAIlABLE) {
                     valid = true;
                 } else if (status == Status.NON_EXISTENT) {
@@ -75,7 +96,7 @@ public class FrontServlet extends HttpServlet {
                 sendJSON(valid, message, response);
                 break;
             case ("/library/getCost"):
-                double cost = dbManager.getCost(request.getParameter("bookName"));
+                double cost = bookService.selectCost(request.getParameter("bookName"));
                 sendJSON(true, String.valueOf(cost), response);
                 break;
             case ("/library/countGivenBooks"):
@@ -83,12 +104,12 @@ public class FrontServlet extends HttpServlet {
                 sendJSON(true, String.valueOf(amount), response);
                 break;
             case ("/library/getGivenBooks"):
-                List<BookCopy> books = dbManager.getReaderBooks(request.getParameter("readerEmail"));
+                List<BookCopy> books = readerService.selectAllBooks(request.getParameter("readerEmail"));
                 sendArrayJSON(books, response);
                 break;
             case ("/library"):
                 url = "/main.jsp";
-                request.setAttribute("books", dbManager.selectFromBook());
+                request.setAttribute("books", bookService.selectBooks());
                 break;
         }
 
@@ -112,14 +133,14 @@ public class FrontServlet extends HttpServlet {
         try {
             referer = new URI(request.getHeader("referer")).getPath();
         } catch (URISyntaxException e) {
-            e.printStackTrace();
-            //TODO log
+            logger.log(Level.SEVERE, "Referer exception ", e);
         }
 
         if (referer != null) {
             switch (referer) {
                 case "/library/addReader":
-                    if (dbManager.addReader(request)) {
+                    Reader reader = RequestHandler.getReaderFromReq(request);
+                    if (readerService.addReader(reader)) {
                         request.setAttribute("result", "Пользователь создан успешно.");
                     } else {
                         request.setAttribute("result", "Не удалось создать пользователя.");
@@ -127,7 +148,8 @@ public class FrontServlet extends HttpServlet {
                     getServletContext().getRequestDispatcher("/result.jsp").forward(request, response);
                     break;
                 case "/library/addBook":
-                    if (dbManager.addBook(request)) {
+                    Book book = RequestHandler.getBookFromReq(request);
+                    if (bookService.addBook(book)) {
                         request.setAttribute("result", "Книга добавлена успешно.");
                     } else {
                         request.setAttribute("result", "Не удалось добавить книгу");
@@ -164,11 +186,11 @@ public class FrontServlet extends HttpServlet {
         JsonObject jsonObject = objectBuilder.build();
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
+
         try {
             response.getWriter().write(jsonObject.toString());
         } catch (IOException e) {
-            e.printStackTrace();
-            //TODO log
+            logger.log(Level.SEVERE, "Writing JSON exception ", e);
         }
     }
 
@@ -176,11 +198,10 @@ public class FrontServlet extends HttpServlet {
         String json = new Gson().toJson(books);
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
+
         try {
             response.getWriter().write(json);
         } catch (IOException e) {
-            e.printStackTrace();
-            //TODO log
+            logger.log(Level.SEVERE, "Writing JSON exception ", e);
         }
     }
-}

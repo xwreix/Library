@@ -1,14 +1,19 @@
-package com.lab.library.dao.beans;
+package com.lab.library.beans;
 
-import java.util.Date;
+
+import java.sql.Date;
 
 public class Reader {
     private int id;
     private String surname;
     private String name;
+    private String patronymic;
+    private String passportNumber;
     private Date dateOfBirth;
     private String address;
     private String email;
+
+    public Reader() {}
 
     public Reader(int id, String surname, String name, Date dateOfBirth, String address, String email) {
         this.id = id;
@@ -65,5 +70,21 @@ public class Reader {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getPatronymic() {
+        return patronymic;
+    }
+
+    public void setPatronymic(String patronymic) {
+        this.patronymic = patronymic;
+    }
+
+    public String getPassportNumber() {
+        return passportNumber;
+    }
+
+    public void setPassportNumber(String passportNumber) {
+        this.passportNumber = passportNumber;
     }
 }

@@ -1,4 +1,4 @@
-package com.lab.library.dao.beans;
+package com.lab.library.beans;
 
 public enum Status {
     AVAIlABLE,

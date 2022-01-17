@@ -25,7 +25,7 @@
         <tbody>
         <c:forEach items="${requestScope.books}" var="element">
             <tr>
-                <td>${element.name}</td>
+                <td>${element.nameInRus}</td>
 
                 <td>
                     <c:forEach items="${element.genres}" var="genre">
