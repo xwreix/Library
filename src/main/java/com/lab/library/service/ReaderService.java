@@ -5,7 +5,9 @@ import com.lab.library.beans.Reader;
 import com.lab.library.beans.Status;
 import com.lab.library.dao.ReaderDao;
 
+import javax.mail.MessagingException;
 import javax.sql.DataSource;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -36,7 +38,7 @@ public class ReaderService {
     public List<Reader> selectReaders(DataSource dataSource) {
         List<Reader> readers = new ArrayList<>();
 
-        try (Connection connection = dataSource.getConnection()){
+        try (Connection connection = dataSource.getConnection()) {
             ResultSet resultSet = ReaderDao.selectReaders(connection);
 
             while (resultSet.next()) {
@@ -57,7 +59,7 @@ public class ReaderService {
     public Status checkReader(String email, DataSource dataSource) {
         Status status = null;
 
-        try (Connection connection = dataSource.getConnection()){
+        try (Connection connection = dataSource.getConnection()) {
             ResultSet resultSet = ReaderDao.selectReaderId(connection, email);
 
             if (!resultSet.next()) {
@@ -84,7 +86,7 @@ public class ReaderService {
     public List<BookCopy> selectAllBooks(String email, DataSource dataSource) {
         List<BookCopy> result = new ArrayList<>();
 
-        try (Connection connection = dataSource.getConnection()){
+        try (Connection connection = dataSource.getConnection()) {
             ResultSet resultSet = ReaderDao.selectAllBooks(connection, email);
 
             while (resultSet.next()) {
@@ -100,6 +102,42 @@ public class ReaderService {
         }
 
         return result;
+    }
+
+    public void sendMails(DataSource dataSource) {
+        try (Connection connection = dataSource.getConnection()) {
+            ResultSet resultSet = ReaderDao.selectOverdue(connection);
+            while (resultSet.next()) {
+                String email = resultSet.getString(1);
+                String days = resultSet.getString(2);
+                String[] parts = days.split(" ");
+                int amount = Integer.parseInt(parts[0]);
+
+                if (amount > 5) {
+                    StringBuilder message = new StringBuilder("Книги которые необходимо вернуть: ");
+                    double total = 0;
+                    ResultSet result = ReaderDao.selectOverdueBooks(connection, email);
+                    while (result.next()) {
+                        String name = result.getString(1);
+                        double cost = result.getDouble(2);
+                        total += cost * amount + (cost * amount) / 100;
+                        message.append(name).append(" ");
+                    }
+                    message.append("Штраф: ").append(total);
+                    SendMail.send(message.toString(), email);
+                } else if(amount == 0){
+                    StringBuilder message = new StringBuilder("Книги которые необходимо вернуть: ");
+                    ResultSet result = ReaderDao.selectOverdueBooks(connection, email);
+                    while (result.next()){
+                        message.append(result.getString(1)).append(" ");
+                    }
+                    SendMail.send(message.toString(), email);
+                }
+
+            }
+        } catch (SQLException | MessagingException | IOException e) {
+            logger.log(Level.SEVERE, "Sending mails exception", e);
+        }
     }
 
 }

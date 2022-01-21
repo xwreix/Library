@@ -21,6 +21,14 @@ public class ReaderDao {
             "JOIN bookcopy ON bookcopy.id = issue.bookcopyid\n" +
             "JOIN book ON book.id = bookcopy.bookid\n" +
             "WHERE reader.email = ? AND returndate IS NULL";
+    public static final String SELECT_OVERDUE = "select reader.email, (now()-preliminaryDate) from issue" +
+            " join reader on reader.id = issue.readerId \n" +
+            "where returnDate is NULL and preliminaryDate < now()";
+    public static final String SELECT_OVERDUE_BOOKS = "select book.nameInRus, book.priceForDay from issue\n" +
+            "join bookcopy on bookcopy.id = issue.bookcopyid\n" +
+            "join book on book.id = bookcopy.bookid\n" +
+            " join reader on reader.id = issue.readerid " +
+            "where reader.email = ?";
 
     public static void insertReader(Connection connection, Reader reader) throws SQLException {
         PreparedStatement preparedStatement = connection.prepareStatement(INSERT_READER);
@@ -60,5 +68,16 @@ public class ReaderDao {
         PreparedStatement preparedStatement = connection.prepareStatement(SELECT_ALL_BOOKS);
         preparedStatement.setString(1, email);
         return preparedStatement.executeQuery();
+    }
+
+    public static ResultSet selectOverdue(Connection connection) throws SQLException{
+        PreparedStatement preparedStatement = connection.prepareStatement(SELECT_OVERDUE);
+        return  preparedStatement.executeQuery();
+    }
+
+    public static ResultSet selectOverdueBooks(Connection connection, String email) throws  SQLException{
+        PreparedStatement preparedStatement = connection.prepareStatement(SELECT_OVERDUE_BOOKS);
+        preparedStatement.setString(1, email);
+        return  preparedStatement.executeQuery();
     }
 }

@@ -121,6 +121,12 @@ public class FrontServlet extends HttpServlet {
                 BookCopy bookCopy = bookService.selectCopyInfo(Integer.parseInt(request.getParameter("id")), dataSource);
                 sendObjJson(bookCopy, response);
                 break;
+            case ("/library/send"):
+                readerService.sendMails(dataSource);
+                url = "/main.jsp";
+                request.setAttribute("booksImg", bookService.selectPopular(dataSource));
+                request.setAttribute("books", bookService.selectBooks(dataSource));
+                break;
             case ("/library"):
                 url = "/main.jsp";
                 request.setAttribute("booksImg", bookService.selectPopular(dataSource));

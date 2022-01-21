@@ -18,6 +18,7 @@
 <div class="btn-group">
     <a href="${pageContext.request.contextPath}/library/readerList" class="button">Список читателей</a>
     <a href="${pageContext.request.contextPath}/library/profitability" class="button">Доходность</a>
+    <a href="${pageContext.request.contextPath}/library/send" class="button">send</a>
 </div>
 
 <jsp:include page="popularBooks.jsp"/>
