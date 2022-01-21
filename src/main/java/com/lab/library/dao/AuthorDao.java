@@ -34,13 +34,12 @@ public class AuthorDao {
         preparedStatement.executeUpdate();
     }
 
-    public static void insertPhotos(Connection connection, Author author) throws SQLException {
-        for(InputStream photo: author.getPhotos()){
-            PreparedStatement preparedStatement = connection.prepareStatement(INSERT_PHOTO);
-            preparedStatement.setInt(1, author.getId());
-            preparedStatement.setBinaryStream(2, photo);
-            preparedStatement.executeUpdate();
-        }
+    public static void insertPhotos(Connection connection, int authorId, InputStream photo) throws SQLException {
+        PreparedStatement preparedStatement = connection.prepareStatement(INSERT_PHOTO);
+        preparedStatement.setInt(1, authorId);
+        preparedStatement.setBinaryStream(2, photo);
+        preparedStatement.executeUpdate();
+
     }
 
 }

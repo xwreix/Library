@@ -46,31 +46,27 @@ public class BookDao {
         return statement.executeQuery();
     }
 
-    public static void insertIntoCover(Connection connection, Book book) throws SQLException {
-        for (InputStream cover : book.getCovers()) {
-            PreparedStatement statement = connection.prepareStatement(INSERT_INTO_COVER);
-            statement.setInt(1, book.getId());
-            statement.setBinaryStream(2, cover);
-            statement.executeUpdate();
-        }
+    public static void insertIntoCover(Connection connection, int bookId, InputStream cover) throws SQLException {
+        PreparedStatement statement = connection.prepareStatement(INSERT_INTO_COVER);
+        statement.setInt(1, bookId);
+        statement.setBinaryStream(2, cover);
+        statement.executeUpdate();
+
     }
 
-    public static void insertIntoGenre(Connection connection, Book book) throws SQLException {
-        for (int genre : book.getGenresId()) {
-            PreparedStatement statement = connection.prepareStatement(INSERT_INTO_GENRE);
-            statement.setInt(1, genre);
-            statement.setInt(2, book.getId());
-            statement.executeUpdate();
-        }
+    public static void insertIntoGenre(Connection connection, int bookId, int genre) throws SQLException {
+        PreparedStatement statement = connection.prepareStatement(INSERT_INTO_GENRE);
+        statement.setInt(1, genre);
+        statement.setInt(2, bookId);
+        statement.executeUpdate();
+
     }
 
     public static void insertIntoBookCopy(Connection connection, Book book) throws SQLException {
-        for (int i = 0; i < book.getTotalAmount(); i++) {
-            PreparedStatement preparedStatement = connection.prepareStatement(INSERT_BOOK_COPY);
-            preparedStatement.setInt(1, book.getId());
-            preparedStatement.setDate(2, book.getRegistrDate());
-            preparedStatement.executeUpdate();
-        }
+        PreparedStatement preparedStatement = connection.prepareStatement(INSERT_BOOK_COPY);
+        preparedStatement.setInt(1, book.getId());
+        preparedStatement.setDate(2, book.getRegistrDate());
+        preparedStatement.executeUpdate();
     }
 
     public static ResultSet selectGenres(Connection connection) throws SQLException {
@@ -83,31 +79,31 @@ public class BookDao {
         return preparedStatement.executeQuery();
     }
 
-    public static ResultSet selectTotal(Connection connection, int id) throws SQLException{
+    public static ResultSet selectTotal(Connection connection, int id) throws SQLException {
         PreparedStatement preparedStatement = connection.prepareStatement(SELECT_TOTAL);
         preparedStatement.setInt(1, id);
-        return  preparedStatement.executeQuery();
+        return preparedStatement.executeQuery();
     }
 
-    public static ResultSet selectNotAvailable(Connection connection,int id) throws SQLException{
+    public static ResultSet selectNotAvailable(Connection connection, int id) throws SQLException {
         PreparedStatement preparedStatement = connection.prepareStatement(SELECT_NOT_AVALABLE);
         preparedStatement.setInt(1, id);
-        return  preparedStatement.executeQuery();
+        return preparedStatement.executeQuery();
     }
 
-    public static ResultSet selectBookGenres(Connection connection, Book book) throws SQLException{
+    public static ResultSet selectBookGenres(Connection connection, Book book) throws SQLException {
         PreparedStatement preparedStatement = connection.prepareStatement(SELECT_BOOK_GENRES);
         preparedStatement.setInt(1, book.getId());
-        return  preparedStatement.executeQuery();
+        return preparedStatement.executeQuery();
     }
 
-    public static ResultSet selectBookId(Connection connection, String name) throws SQLException{
+    public static ResultSet selectBookId(Connection connection, String name) throws SQLException {
         PreparedStatement preparedStatement = connection.prepareStatement(SELECT_BOOK_ID);
         preparedStatement.setString(1, name);
         return preparedStatement.executeQuery();
     }
 
-    public static ResultSet selectCost(Connection connection, String name) throws SQLException{
+    public static ResultSet selectCost(Connection connection, String name) throws SQLException {
         PreparedStatement preparedStatement = connection.prepareStatement(SELECT_COST);
         preparedStatement.setString(1, name);
         return preparedStatement.executeQuery();

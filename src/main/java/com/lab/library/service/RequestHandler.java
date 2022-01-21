@@ -1,8 +1,6 @@
 package com.lab.library.service;
 
-import com.lab.library.beans.Author;
-import com.lab.library.beans.Book;
-import com.lab.library.beans.Reader;
+import com.lab.library.beans.*;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -14,21 +12,12 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Objects;
-import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 public class RequestHandler {
-    private static Logger logger = Logger.getLogger(RequestHandler.class.getName());
-
-    static {
-        try {
-            logger.addHandler(new FileHandler("libraryLog"));
-        } catch (IOException e) {
-            logger.log(Level.SEVERE, "Log exception", e);
-        }
-    }
+    private static final Logger logger = Logger.getLogger(RequestHandler.class.getName());
 
     public static Reader getReaderFromReq(HttpServletRequest request) {
         Reader reader = new Reader();
@@ -125,6 +114,69 @@ public class RequestHandler {
         book.setRegistrDate(Date.valueOf(request.getParameter("registrDate")));
 
         return book;
+    }
+
+    public static Issue getNewIssueFromReq(HttpServletRequest request) {
+        Issue issue = new Issue();
+
+        issue.setReaderEmail(request.getParameter("email"));
+
+        Enumeration<String> params = request.getParameterNames();
+        List<String> books = new ArrayList<>();
+        while (params.hasMoreElements()) {
+            String el = params.nextElement();
+            if (Pattern.matches("book[0-9]*", el)) {
+                books.add(request.getParameter(el));
+            }
+        }
+        issue.setBooks(books);
+
+        issue.setDiscount(Integer.parseInt(request.getParameter("discount")));
+        issue.setDate(Date.valueOf(request.getParameter("preliminaryDate")));
+
+        return issue;
+    }
+
+    public static Issue getReturnedFromReq(HttpServletRequest request) {
+        Issue issue = new Issue();
+
+        issue.setReaderEmail(request.getParameter("email"));
+
+        Enumeration<String> params = request.getParameterNames();
+        List<BookCopy> books = new ArrayList<>();
+        while (params.hasMoreElements()) {
+            String el = params.nextElement();
+            if (Pattern.matches("book[0-9]*", el)) {
+                BookCopy bookCopy = new BookCopy();
+                bookCopy.setName(request.getParameter(el));
+                bookCopy.setDamage(request.getParameter("damage" + el.substring(4)));
+                if (!Objects.equals(request.getParameter("rating" + el.substring(4)), "")) {
+                    bookCopy.setRating(Integer.parseInt(request.getParameter("rating" + el.substring(4))));
+                }
+                List<InputStream> photos = new ArrayList<>();
+                try {
+                    List<Part> parts = (List<Part>) request.getParts();
+                    for (Part part : parts) {
+                        if (part.getName().equalsIgnoreCase("damagePhotos" + el.substring(4) + "[]")) {
+                            InputStream inputStream = part.getInputStream();
+                            byte[] bytes = new byte[inputStream.available()];
+                            if (bytes.length != 0) {
+                                photos.add(inputStream);
+                            }
+                        }
+                    }
+                    bookCopy.setDamagePhotos(photos);
+                } catch (ServletException | IOException e) {
+                    logger.log(Level.SEVERE, "Getting parts exception ", e);
+                }
+                books.add(bookCopy);
+            }
+        }
+        issue.setReturned(books);
+
+        issue.setDate(Date.valueOf(request.getParameter("returnDate")));
+
+        return issue;
     }
 
     private static String setNull(String param) {

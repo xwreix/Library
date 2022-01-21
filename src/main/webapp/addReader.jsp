@@ -62,7 +62,8 @@
 
 
 <script src="http://code.jquery.com/jquery-1.11.0.js"></script>
-<script src="${pageContext.request.contextPath}/js/validation.js"></script>
+<script src="${pageContext.request.contextPath}/js/service/validation.js"></script>
+<script src="${pageContext.request.contextPath}/js/forms/reader.js"></script>
 <script src="${pageContext.request.contextPath}/js/addReader.js"></script>
 </body>
 </html>

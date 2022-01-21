@@ -1,24 +1,18 @@
-let current_page = 1;
-let records_per_page = 20;
-let total = document.getElementById("list").rows.length;
-
 function prevPage() {
-    if (current_page > 1) {
-        current_page--;
-        changePage(current_page);
+    if (pages.current_page > 1) {
+        pages.current_page--;
+        changePage(pages.current_page);
     }
 }
-
-
 function nextPage() {
-    if (current_page < pagesAmount()) {
-        current_page++;
-        changePage(current_page);
+    if (pages.current_page < pagesAmount()) {
+        pages.current_page++;
+        changePage(pages.current_page);
     }
 }
 
 function pagesAmount() {
-    return Math.ceil((total - 1) / records_per_page);
+    return Math.ceil((pages.total - 1) / pages.records_per_page);
 }
 
 function changePage(page) {
@@ -39,7 +33,7 @@ function changePage(page) {
 
     table.rows[0].style.display = "";
 
-    for (let i = (page - 1) * records_per_page + 1; i < (page * records_per_page) + 1; i++) {
+    for (let i = (page - 1) * pages.records_per_page + 1; i < (page * pages.records_per_page) + 1; i++) {
         if (table.rows[i]) {
             table.rows[i].style.display = "";
         }
@@ -76,7 +70,6 @@ const sort = ({target}) => {
         cell.classList.toggle('sorted', cell === target);
 };
 
-
 function tableSearch() {
     let btnNext = document.getElementById("btn_next");
     let btnPrev = document.getElementById("btn_prev");
@@ -109,7 +102,9 @@ function tableSearch() {
 }
 
 window.onload = function () {
-    changePage(current_page);
+    pages.read();
+
+    changePage(pages.current_page);
 
     document.querySelectorAll('.sorted thead').forEach(tableTh =>
         tableTh.addEventListener('click', () => sort(event)));

@@ -69,8 +69,9 @@
 
 
 <script src="http://code.jquery.com/jquery-1.11.0.js"></script>
-<script src="${pageContext.request.contextPath}/js/validation.js"></script>
+<script src="${pageContext.request.contextPath}/js/service/validation.js"></script>
 <script src="${pageContext.request.contextPath}/js/issueBook.js"></script>
-<script src="${pageContext.request.contextPath}/js/multistep.js"></script>
+<script src="${pageContext.request.contextPath}/js/forms/newIssue.js"></script>
+<script src="${pageContext.request.contextPath}/js/service/multistep.js"></script>
 </body>
 </html>

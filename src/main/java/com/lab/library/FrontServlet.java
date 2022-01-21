@@ -1,14 +1,13 @@
 package com.lab.library;
 
 import com.google.gson.Gson;
-import com.lab.library.beans.Book;
-import com.lab.library.beans.BookCopy;
-import com.lab.library.beans.Reader;
-import com.lab.library.beans.Status;
+import com.lab.library.beans.*;
 import com.lab.library.dao.ConnectionPool;
 import com.lab.library.service.BookService;
+import com.lab.library.service.IssueService;
 import com.lab.library.service.ReaderService;
 import com.lab.library.service.RequestHandler;
+import org.apache.commons.dbcp2.BasicDataSource;
 
 import javax.json.Json;
 import javax.json.JsonObject;
@@ -20,32 +19,26 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.List;
-import java.util.logging.FileHandler;
+import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @WebServlet(name = "frontServlet", value = "/library/*")
 @MultipartConfig
 public class FrontServlet extends HttpServlet {
-    Logger logger = Logger.getLogger(FrontServlet.class.getName());
-    ReaderService readerService = new ReaderService();
-    BookService bookService = new BookService();
-    //manager dbManager = new manager();
+    private static final Logger logger = Logger.getLogger(FrontServlet.class.getName());
+    private final ReaderService readerService = new ReaderService();
+    private final BookService bookService = new BookService();
+    private final IssueService issueService = new IssueService();
+    private static BasicDataSource dataSource = null;
 
     public void init() {
-        try {
-            logger.addHandler(new FileHandler("libraryLog"));
-            ConnectionPool.create();
-
-        } catch (IOException e) {
-            logger.log(Level.SEVERE, "Log exception ", e);
-        } catch (SQLException e) {
-            logger.log(Level.SEVERE, "Creating connection exception ", e);
-        }
+        connectToDB();
     }
 
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -61,11 +54,11 @@ public class FrontServlet extends HttpServlet {
                 break;
             case ("/library/addBook"):
                 url = "/addBook.jsp";
-                request.setAttribute("genres", bookService.selectGenres());
+                request.setAttribute("genres", bookService.selectGenres(dataSource));
                 break;
             case ("/library/readerList"):
                 url = "/readerList.jsp";
-                request.setAttribute("readers", readerService.selectReaders());
+                request.setAttribute("readers", readerService.selectReaders(dataSource));
                 break;
             case ("/library/issueBook"):
                 url = "/issueBook.jsp";
@@ -74,7 +67,7 @@ public class FrontServlet extends HttpServlet {
                 url = "/returnBook.jsp";
                 break;
             case ("/library/checkReaderExistence"):
-                status = readerService.checkReader(request.getParameter("readerEmail"));
+                status = readerService.checkReader(request.getParameter("readerEmail"), dataSource);
                 if (status == Status.AVAIlABLE) {
                     valid = true;
                 } else if (status == Status.NON_EXISTENT) {
@@ -85,41 +78,46 @@ public class FrontServlet extends HttpServlet {
                 sendJSON(valid, message, response);
                 break;
             case ("/library/checkBook"):
-                status = bookService.checkBook(request.getParameter("bookName"));
-                if (status == Status.AVAIlABLE) {
-                    valid = true;
-                } else if (status == Status.NON_EXISTENT) {
-                    message = "Такой книги не существует";
-                } else if (status == Status.LOCKED) {
-                    message = "В наличии нет доступных экзмепляров";
-                }
+                    status = bookService.checkBook(request.getParameter("bookName"), dataSource);
+                    if (status == Status.AVAIlABLE) {
+                        valid = true;
+                    } else if (status == Status.NON_EXISTENT) {
+                        message = "Такой книги не существует";
+                    } else if (status == Status.LOCKED) {
+                        message = "В наличии нет доступных экзмепляров";
+                    }
                 sendJSON(valid, message, response);
                 break;
             case ("/library/getCost"):
-                double cost = bookService.selectCost(request.getParameter("bookName"));
+                double cost = bookService.selectCost(request.getParameter("bookName"), dataSource);
                 sendJSON(true, String.valueOf(cost), response);
                 break;
             case ("/library/countGivenBooks"):
-                int amount = dbManager.countReaderBooks(request.getParameter("readerEmail"));
-                sendJSON(true, String.valueOf(amount), response);
+                status = readerService.checkReader(request.getParameter("readerEmail"), dataSource);
+                if (status == Status.AVAIlABLE) {
+                    message = "У читателя нет книг для возврата";
+                } else if (status == Status.NON_EXISTENT) {
+                    message = "Читатель не существует";
+                } else if (status == Status.LOCKED) {
+                    valid = true;
+                }
+                sendJSON(valid, message, response);
                 break;
             case ("/library/getGivenBooks"):
-                List<BookCopy> books = readerService.selectAllBooks(request.getParameter("readerEmail"));
+                List<BookCopy> books = readerService.selectAllBooks(request.getParameter("readerEmail"), dataSource);
                 sendArrayJSON(books, response);
                 break;
             case ("/library"):
                 url = "/main.jsp";
-                request.setAttribute("books", bookService.selectBooks());
+                request.setAttribute("books", bookService.selectBooks(dataSource));
                 break;
         }
 
         if (url != null) {
-
             try {
                 getServletContext().getRequestDispatcher(url).forward(request, response);
             } catch (ServletException e) {
-                e.printStackTrace();
-                //TODO log
+                logger.log(Level.SEVERE, "Forward exception ", e);
             }
         }
     }
@@ -140,7 +138,7 @@ public class FrontServlet extends HttpServlet {
             switch (referer) {
                 case "/library/addReader":
                     Reader reader = RequestHandler.getReaderFromReq(request);
-                    if (readerService.addReader(reader)) {
+                    if (readerService.addReader(reader, dataSource)) {
                         request.setAttribute("result", "Пользователь создан успешно.");
                     } else {
                         request.setAttribute("result", "Не удалось создать пользователя.");
@@ -149,7 +147,7 @@ public class FrontServlet extends HttpServlet {
                     break;
                 case "/library/addBook":
                     Book book = RequestHandler.getBookFromReq(request);
-                    if (bookService.addBook(book)) {
+                    if (bookService.addBook(book, dataSource)) {
                         request.setAttribute("result", "Книга добавлена успешно.");
                     } else {
                         request.setAttribute("result", "Не удалось добавить книгу");
@@ -157,12 +155,14 @@ public class FrontServlet extends HttpServlet {
                     getServletContext().getRequestDispatcher("/result.jsp").forward(request, response);
                     break;
                 case "/library/issueBook":
-                    List<BookCopy> givenBooks = dbManager.addIssue(request);
+                    Issue issue = RequestHandler.getNewIssueFromReq(request);
+                    List<BookCopy> givenBooks = issueService.addNewIssue(issue, dataSource);
                     request.setAttribute("givenBooks", givenBooks);
                     getServletContext().getRequestDispatcher("/givenBooks.jsp").forward(request, response);
                     break;
                 case "/library/returnBook":
-                    if (dbManager.returnBook(request)) {
+                    Issue returned = RequestHandler.getReturnedFromReq(request);
+                    if (issueService.finishIssue(returned, dataSource)) {
                         request.setAttribute("result", "Возврат книг проведён успешно");
                     } else {
                         request.setAttribute("result", "Не удалось провести возврат книг");
@@ -205,3 +205,43 @@ public class FrontServlet extends HttpServlet {
             logger.log(Level.SEVERE, "Writing JSON exception ", e);
         }
     }
+    private void sendMapJSON(HashMap<Boolean, String> result, HttpServletResponse response) {
+        String json = new Gson().toJson(result);
+        System.out.println(json);
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+
+        try {
+            response.getWriter().write(json);
+        } catch (IOException e) {
+            logger.log(Level.SEVERE, "Writing JSON exception ", e);
+        }
+    }
+
+    private void connectToDB() {
+        dataSource = new BasicDataSource();
+
+        try {
+            Class.forName("org.postgresql.Driver");
+        } catch (ClassNotFoundException e) {
+            logger.log(Level.SEVERE, "Driver exception ", e);
+        }
+
+        Properties props = new Properties();
+        String fileName = "db.properties";
+        InputStream inputStream = ConnectionPool.class.getClassLoader().getResourceAsStream(fileName);
+        try {
+            props.load(inputStream);
+        } catch (IOException e) {
+            logger.log(Level.SEVERE, "Loading properties exception ", e);
+        }
+
+        dataSource.setUrl(props.getProperty("db.url"));
+        dataSource.setUsername(props.getProperty("db.user"));
+        dataSource.setPassword(props.getProperty("db.password"));
+
+        dataSource.setMinIdle(5);
+        dataSource.setMaxIdle(10);
+        dataSource.setMaxTotal(25);
+    }
+}

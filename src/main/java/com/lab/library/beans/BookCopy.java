@@ -1,12 +1,20 @@
 package com.lab.library.beans;
 
+import java.io.InputStream;
+import java.util.List;
+
 public class BookCopy {
     private int id;
     private String name;
     private String damage;
+    private List<InputStream> damagePhotos;
+    private int rating;
     private int discount;
-    private String preliminaryDate;
+    private String date;
     private double priceForDay;
+
+    public BookCopy() {
+    }
 
     public BookCopy(int id, String name, String damage, int discount) {
         this.id = id;
@@ -15,10 +23,10 @@ public class BookCopy {
         this.discount = discount;
     }
 
-    public BookCopy(String name, int discount, String preliminaryDate, double priceForDay) {
+    public BookCopy(String name, int discount, String date, double priceForDay) {
         this.name = name;
         this.discount = discount;
-        this.preliminaryDate = preliminaryDate;
+        this.date = date;
         this.priceForDay = priceForDay;
     }
 
@@ -54,12 +62,12 @@ public class BookCopy {
         this.discount = discount;
     }
 
-    public String getPreliminaryDate() {
-        return preliminaryDate;
+    public String getDate() {
+        return date;
     }
 
-    public void setPreliminaryDate(String preliminaryDate) {
-        this.preliminaryDate = preliminaryDate;
+    public void setDate(String date) {
+        this.date = date;
     }
 
     public double getPriceForDay() {
@@ -68,5 +76,21 @@ public class BookCopy {
 
     public void setPriceForDay(double priceForDay) {
         this.priceForDay = priceForDay;
+    }
+
+    public List<InputStream> getDamagePhotos() {
+        return damagePhotos;
+    }
+
+    public void setDamagePhotos(List<InputStream> damagePhotos) {
+        this.damagePhotos = damagePhotos;
+    }
+
+    public int getRating() {
+        return rating;
+    }
+
+    public void setRating(int rating) {
+        this.rating = rating;
     }
 }

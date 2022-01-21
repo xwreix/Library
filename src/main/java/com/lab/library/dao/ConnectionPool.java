@@ -8,6 +8,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class ConnectionPool {
     private String url;
@@ -16,6 +18,7 @@ public class ConnectionPool {
     private static List<Connection> connectionPool;
     private static List<Connection> usedConnections = new ArrayList<>();
     private static int POOL_SIZE = 10;
+    private static Logger logger = Logger.getLogger(ConnectionPool.class.getName());
 
     public ConnectionPool(String url, String user, String password, List<Connection> pool) {
         this.url = url;
@@ -47,7 +50,7 @@ public class ConnectionPool {
         try {
             props.load(inputStream);
         } catch (IOException e) {
-            //TODO log
+            logger.log(Level.SEVERE, "Loading properties exception ", e);
         }
 
         String url = props.getProperty("db.url");
@@ -78,8 +81,7 @@ public class ConnectionPool {
         try {
             Class.forName("org.postgresql.Driver");
         } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-            //TODO log
+            logger.log(Level.SEVERE, "Driver exception ", e);
         }
         return DriverManager.getConnection(url, user, password);
     }

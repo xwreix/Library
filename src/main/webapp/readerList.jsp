@@ -57,6 +57,7 @@
 
 </div>
 
-<script src="${pageContext.request.contextPath}/js/tableService.js"></script>
+<script src="${pageContext.request.contextPath}/js/service/pages.js"></script>
+<script src="${pageContext.request.contextPath}/js/service/tableService.js"></script>
 </body>
 </html>
