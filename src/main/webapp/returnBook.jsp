@@ -69,7 +69,6 @@
     </form>
 </div>
 
-
 <script src="http://code.jquery.com/jquery-1.11.0.js"></script>
 <script src="${pageContext.request.contextPath}/js/service/validation.js"></script>
 <script src="${pageContext.request.contextPath}/js/returnBook.js"></script>

@@ -2,7 +2,6 @@ package com.lab.library;
 
 import com.google.gson.Gson;
 import com.lab.library.beans.*;
-import com.lab.library.dao.ConnectionPool;
 import com.lab.library.service.BookService;
 import com.lab.library.service.IssueService;
 import com.lab.library.service.ReaderService;
@@ -22,7 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.HashMap;
+import java.sql.Date;
 import java.util.List;
 import java.util.Properties;
 import java.util.logging.Level;
@@ -66,6 +65,9 @@ public class FrontServlet extends HttpServlet {
             case ("/library/returnBook"):
                 url = "/returnBook.jsp";
                 break;
+            case ("/library/writeOff"):
+                url = "/writeOff.jsp";
+                break;
             case ("/library/checkReaderExistence"):
                 status = readerService.checkReader(request.getParameter("readerEmail"), dataSource);
                 if (status == Status.AVAIlABLE) {
@@ -105,10 +107,23 @@ public class FrontServlet extends HttpServlet {
                 break;
             case ("/library/getGivenBooks"):
                 List<BookCopy> books = readerService.selectAllBooks(request.getParameter("readerEmail"), dataSource);
-                sendArrayJSON(books, response);
+                sendObjJson(books, response);
+                break;
+            case("/library/profitability"):
+                url = "/profitability.jsp";
+                break;
+            case ("/library/calcProfitability"):
+                Profitability profitability = issueService.calcProfit(Date.valueOf(request.getParameter("start")),
+                        Date.valueOf(request.getParameter("finish")), dataSource);
+                sendObjJson(profitability, response);
+                break;
+            case ("/library/getCopyInfo"):
+                BookCopy bookCopy = bookService.selectCopyInfo(Integer.parseInt(request.getParameter("id")), dataSource);
+                sendObjJson(bookCopy, response);
                 break;
             case ("/library"):
                 url = "/main.jsp";
+                request.setAttribute("booksImg", bookService.selectPopular(dataSource));
                 request.setAttribute("books", bookService.selectBooks(dataSource));
                 break;
         }
@@ -169,6 +184,14 @@ public class FrontServlet extends HttpServlet {
                     }
                     getServletContext().getRequestDispatcher("/result.jsp").forward(request, response);
                     break;
+                case "/library/writeOff":
+                    if(bookService.writeOff(Integer.parseInt(request.getParameter("copyId")), dataSource)){
+                        request.setAttribute("result", "Копия удалена");
+                    } else {
+                        request.setAttribute("result", "Не удалось удалить копию");
+                    }
+                    getServletContext().getRequestDispatcher("/result.jsp").forward(request, response);
+                    break;
                 default:
                     getServletContext().getRequestDispatcher("/result.jsp").forward(request, response);
             }
@@ -194,20 +217,8 @@ public class FrontServlet extends HttpServlet {
         }
     }
 
-    private void sendArrayJSON(List<BookCopy> books, HttpServletResponse response) {
-        String json = new Gson().toJson(books);
-        response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
-
-        try {
-            response.getWriter().write(json);
-        } catch (IOException e) {
-            logger.log(Level.SEVERE, "Writing JSON exception ", e);
-        }
-    }
-    private void sendMapJSON(HashMap<Boolean, String> result, HttpServletResponse response) {
-        String json = new Gson().toJson(result);
-        System.out.println(json);
+    private void sendObjJson(Object object, HttpServletResponse response){
+        String json = new Gson().toJson(object);
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
 
@@ -229,7 +240,7 @@ public class FrontServlet extends HttpServlet {
 
         Properties props = new Properties();
         String fileName = "db.properties";
-        InputStream inputStream = ConnectionPool.class.getClassLoader().getResourceAsStream(fileName);
+        InputStream inputStream = FrontServlet.class.getClassLoader().getResourceAsStream(fileName);
         try {
             props.load(inputStream);
         } catch (IOException e) {

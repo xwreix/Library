@@ -141,6 +141,7 @@ public class RequestHandler {
         Issue issue = new Issue();
 
         issue.setReaderEmail(request.getParameter("email"));
+        issue.setCost(Double.parseDouble(request.getParameter("cost")));
 
         Enumeration<String> params = request.getParameterNames();
         List<BookCopy> books = new ArrayList<>();

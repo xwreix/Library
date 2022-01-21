@@ -23,6 +23,26 @@ public class BookDao {
             "where bookId = ?";
     private static final String SELECT_BOOK_ID = "SELECT id FROM book WHERE nameInRus = ?";
     private static final String SELECT_COST = "SELECT priceForDay FROM book WHERE nameInRus = ?";
+    private static final String SELECT_POPULAR = "SELECT book.id, COUNT(book.id) FROM issue\n" +
+            "join bookcopy on bookcopy.id = issue.bookcopyid\n" +
+            "join book on book.id = bookcopy.bookid\n" +
+            "where returnDate > now() - interval '3 months'\n" +
+            "GROUP BY book.id\n" +
+            "order by count desc\n" +
+            "limit 3";
+    private static final String SELECT_COVER = "SELECT img from cover where id=?";
+    private static final String SELECT_RATING = "select avg(rating) from issue\n" +
+            "join bookcopy on bookcopy.id = issue.bookcopyid\n" +
+            "join book on book.id = bookcopy.bookid\n" +
+            "where book.id = ?";
+    private static final String SELECT_COPY_INFO = "select book.nameinRus, damage from bookcopy" +
+            " join book on book.id = bookcopy.bookid" +
+            " where bookcopy.id = ?";
+    private static final String IS_ISSUED = "select id from issue\n" +
+            "where bookcopyid = ? and returnDate is null;";
+    private static final String IS_COPY_EXISTING = "select * from bookcopy where id = ?";
+    private static final String INSERT_ARCHIVE = "insert into archive(bookcopyid, damage, name) values (?, ?, ?)";
+    private static final String DELETE_COPY = "delete from bookcopy where id = ?";
 
     public static ResultSet insertIntoBook(Connection connection, Book book) throws SQLException {
         PreparedStatement statement = connection.prepareStatement(INSERT_INTO_BOOK);
@@ -107,5 +127,54 @@ public class BookDao {
         PreparedStatement preparedStatement = connection.prepareStatement(SELECT_COST);
         preparedStatement.setString(1, name);
         return preparedStatement.executeQuery();
+    }
+
+    public static ResultSet selectPopular(Connection connection) throws SQLException {
+        PreparedStatement preparedStatement = connection.prepareStatement(SELECT_POPULAR);
+        return preparedStatement.executeQuery();
+    }
+
+    public static ResultSet selectCover(Connection connection, int id) throws SQLException {
+        PreparedStatement preparedStatement = connection.prepareStatement(SELECT_COVER);
+        preparedStatement.setInt(1, id);
+        return preparedStatement.executeQuery();
+    }
+
+    public static ResultSet selectRating(Connection connection, int id) throws SQLException {
+        PreparedStatement preparedStatement = connection.prepareStatement(SELECT_RATING);
+        preparedStatement.setInt(1, id);
+        return preparedStatement.executeQuery();
+    }
+
+    public static ResultSet selectCopyInfo(Connection connection, int id) throws SQLException {
+        PreparedStatement preparedStatement = connection.prepareStatement(SELECT_COPY_INFO);
+        preparedStatement.setInt(1, id);
+        return preparedStatement.executeQuery();
+    }
+
+    public static ResultSet isIssued(Connection connection, int id) throws SQLException {
+        PreparedStatement preparedStatement = connection.prepareStatement(IS_ISSUED);
+        preparedStatement.setInt(1, id);
+        return preparedStatement.executeQuery();
+    }
+
+    public static ResultSet isCopyExisting(Connection connection, int id) throws SQLException {
+        PreparedStatement preparedStatement = connection.prepareStatement(IS_COPY_EXISTING);
+        preparedStatement.setInt(1, id);
+        return preparedStatement.executeQuery();
+    }
+
+    public static void insertArchive(Connection connection, int id, String damage, String name) throws SQLException {
+        PreparedStatement preparedStatement = connection.prepareStatement(INSERT_ARCHIVE);
+        preparedStatement.setInt(1, id);
+        preparedStatement.setString(2, damage);
+        preparedStatement.setString(3, name);
+        preparedStatement.executeUpdate();
+    }
+
+    public static void deleteCopy(Connection connection, int id) throws SQLException {
+        PreparedStatement preparedStatement = connection.prepareStatement(DELETE_COPY);
+        preparedStatement.setInt(1, id);
+        preparedStatement.executeUpdate();
     }
 }

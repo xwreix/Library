@@ -10,6 +10,7 @@ public class Issue {
     private List<BookCopy> returned;
     private Date date;
     private int discount;
+    private double cost;
 
     public Issue() {
     }
@@ -60,5 +61,13 @@ public class Issue {
 
     public void setReturned(List<BookCopy> returned) {
         this.returned = returned;
+    }
+
+    public double getCost() {
+        return cost;
+    }
+
+    public void setCost(double cost) {
+        this.cost = cost;
     }
 }

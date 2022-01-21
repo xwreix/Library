@@ -13,10 +13,14 @@
     <a href="${pageContext.request.contextPath}/library/addBook" class="button">Добавить книгу</a>
     <a href="${pageContext.request.contextPath}/library/issueBook" class="button">Выдать книги</a>
     <a href="${pageContext.request.contextPath}/library/returnBook" class="button">Возврат книг</a>
+    <a href="${pageContext.request.contextPath}/library/writeOff" class="button">Списание книги</a>
 </div>
 <div class="btn-group">
     <a href="${pageContext.request.contextPath}/library/readerList" class="button">Список читателей</a>
+    <a href="${pageContext.request.contextPath}/library/profitability" class="button">Доходность</a>
 </div>
+
+<jsp:include page="popularBooks.jsp"/>
 <jsp:include page="bookList.jsp"/>
 </body>
 </html>

@@ -13,6 +13,7 @@
     <table class="table sorted searchable" id="list">
         <thead>
         <tr>
+            <th>Идентификационный номер</th>
             <th>Наименование</th>
             <th>Имеющиеся нарушения экземпляра</th>
             <th>Скидка</th>
@@ -21,6 +22,7 @@
         <tbody>
         <c:forEach items="${requestScope.givenBooks}" var="element">
             <tr>
+                <td>${element.id}</td>
                 <td>${element.name}</td>
 
                 <td>

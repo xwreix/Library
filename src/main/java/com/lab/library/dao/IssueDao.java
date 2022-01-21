@@ -26,6 +26,7 @@ public class IssueDao {
     public static final String INSERT_DAMAGE_PHOTO =  "INSERT INTO damagePhoto(img, copyid) VALUES (?, ?)";
     public static final String UPDATE_ISSUE = "UPDATE issue SET returnDate = ?, rating = ?\n" +
             "WHERE readerId=? AND bookcopyid=? AND returnDate IS NULL;";
+    public static final String INSERT_PAYMENT = "insert into payment(readerId, paymDate, amount) values (?, ?, ?)";
 
     public static void insertIssue(Connection connection, Issue issue, int copyId) throws SQLException {
         PreparedStatement preparedStatement = connection.prepareStatement(INSERT_ISSUE);
@@ -77,4 +78,14 @@ public class IssueDao {
         preparedStatement.setInt(4, bookCopy.getId());
         preparedStatement.executeUpdate();
     }
+
+    public static void insertPayment(Connection connection, Issue issue) throws SQLException{
+        PreparedStatement preparedStatement = connection.prepareStatement(INSERT_PAYMENT);
+        preparedStatement.setInt(1, issue.getReaderId());
+        preparedStatement.setDate(2, issue.getDate());
+        preparedStatement.setDouble(3, issue.getCost());
+        preparedStatement.executeUpdate();
+    }
+
+
 }
