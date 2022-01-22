@@ -18,7 +18,7 @@ public class SendMail {
 
         Session mailSession = Session.getDefaultInstance(properties);
         MimeMessage message = new MimeMessage(mailSession);
-        message.setFrom(new InternetAddress("ka2879365"));
+        message.setFrom(new InternetAddress(user));
         message.addRecipient(Message.RecipientType.TO, new InternetAddress(email));
         message.setSubject("Library");
         message.setText(text);
