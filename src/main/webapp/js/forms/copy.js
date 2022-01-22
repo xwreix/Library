@@ -9,7 +9,7 @@ let copy = {
     },
 
     getInfo() {
-        if(!isEmpty(this.id.value.trim())){
+        if (!isEmpty(this.id.value.trim())) {
             $.get("/library/getCopyInfo", {id: copy.id.value}, function (responseJson) {
                 if (responseJson['id'] === 0) {
                     showError(copy.id, "Книга выдана читателю");
@@ -19,13 +19,8 @@ let copy = {
                     $('#info').html('');
                 } else {
                     showSuccess(copy.id);
-                    let name = responseJson['name'];
-                    let damage = responseJson['damage'];
-                    if (undefined === damage){
-                        damage = "";
-                    }
-                    $('#info').html('Наименование: ' + name + '<br>' +
-                        'Повреждения: ' + damage);
+                    $('#info').html('Наименование: ' + responseJson['name'] + '<br>' +
+                        'Повреждения: ' + (responseJson['damage'] || ""));
                     document.querySelector('#submitWritingOff').style.display = "";
                 }
             });
@@ -35,7 +30,7 @@ let copy = {
 
     },
 
-    isValid(){
+    isValid() {
         return this.id.parentElement.classList.contains('success');
     }
 

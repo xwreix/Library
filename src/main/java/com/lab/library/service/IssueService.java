@@ -19,7 +19,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class IssueService {
-    private static final Logger logger = Logger.getLogger(IssueService.class.getName());
+    private final Logger logger = Logger.getLogger(IssueService.class.getName());
+    private final IssueDao issueDao = new IssueDao();
+    private final ProfitDao profitDao = new ProfitDao();
+    private final ReaderDao readerDao = new ReaderDao();
 
     public IssueService() {
     }
@@ -30,14 +33,14 @@ public class IssueService {
         try (Connection connection = dataSource.getConnection()) {
             connection.setAutoCommit(false);
 
-            ResultSet resultSet = ReaderDao.selectReaderId(connection, issue.getReaderEmail());
+            ResultSet resultSet = readerDao.selectReaderId(connection, issue.getReaderEmail());
             if (resultSet.next()) {
                 issue.setReaderId(resultSet.getInt(1));
             }
 
             for (String book : issue.getBooks()) {
                 BookCopy bookCopy = new BookCopy();
-                resultSet = IssueDao.selectBookCopy(connection, book);
+                resultSet = issueDao.selectBookCopy(connection, book);
                 if (resultSet.next()) {
                     bookCopy.setId(resultSet.getInt(1));
                     bookCopy.setDamage(resultSet.getString(2));
@@ -45,7 +48,7 @@ public class IssueService {
                 bookCopy.setDiscount(issue.getDiscount());
                 bookCopy.setName(book);
 
-                IssueDao.insertIssue(connection, issue, bookCopy.getId());
+                issueDao.insertIssue(connection, issue, bookCopy.getId());
 
                 givenBooks.add(bookCopy);
             }
@@ -64,20 +67,20 @@ public class IssueService {
         try (Connection connection = dataSource.getConnection()) {
             connection.setAutoCommit(false);
 
-            ResultSet resultSet = ReaderDao.selectReaderId(connection, issue.getReaderEmail());
+            ResultSet resultSet = readerDao.selectReaderId(connection, issue.getReaderEmail());
             if (resultSet.next()) {
                 issue.setReaderId(resultSet.getInt(1));
             }
 
-            IssueDao.insertPayment(connection, issue);
+            issueDao.insertPayment(connection, issue);
 
             for (BookCopy book : issue.getReturned()) {
-                resultSet = IssueDao.selectTakenCopy(connection, book.getName(), issue.getReaderId());
+                resultSet = issueDao.selectTakenCopy(connection, book.getName(), issue.getReaderId());
                 if (resultSet.next()) {
                     book.setId(resultSet.getInt(1));
                 }
 
-                resultSet = IssueDao.selectDamage(connection, book.getId());
+                resultSet = issueDao.selectDamage(connection, book.getId());
                 String existingDamage = "";
                 if (resultSet.next()) {
                     existingDamage = resultSet.getString(1);
@@ -87,16 +90,16 @@ public class IssueService {
                     book.setDamage(existingDamage + " " + book.getDamage());
                 }
 
-                IssueDao.insertDamage(connection, book);
+                issueDao.insertDamage(connection, book);
 
                 if (book.getDamagePhotos() != null) {
                     for (InputStream photo : book.getDamagePhotos()) {
-                        IssueDao.insertDamagePhoto(connection, photo, book.getId());
+                        issueDao.insertDamagePhoto(connection, photo, book.getId());
                     }
                 }
 
 
-                IssueDao.updateIssue(connection, issue, book);
+                issueDao.updateIssue(connection, issue, book);
             }
 
             connection.commit();
@@ -112,19 +115,19 @@ public class IssueService {
         Profitability profitability = new Profitability();
 
         try (Connection connection = dataSource.getConnection()) {
-            ResultSet resultSet = ProfitDao.selectBooksAmount(start, finish, connection);
+            ResultSet resultSet = profitDao.selectBooksAmount(start, finish, connection);
             if(resultSet.next()){
                 profitability.setBooksAmount(resultSet.getInt(1));
             }
 
             double revenue = 0;
-            resultSet = ProfitDao.selectPayments(start, finish, connection);
+            resultSet = profitDao.selectPayments(start, finish, connection);
             while(resultSet.next()){
                 revenue += resultSet.getDouble(1);
             }
             profitability.setRevenue(revenue);
 
-            resultSet = ProfitDao.selectReadersAmount(start, finish, connection);
+            resultSet = profitDao.selectReadersAmount(start, finish, connection);
             if(resultSet.next()){
                 profitability.setReadersAmount(resultSet.getInt(1));
             }

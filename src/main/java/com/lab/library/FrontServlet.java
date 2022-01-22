@@ -34,6 +34,7 @@ public class FrontServlet extends HttpServlet {
     private final ReaderService readerService = new ReaderService();
     private final BookService bookService = new BookService();
     private final IssueService issueService = new IssueService();
+    private final RequestHandler requestHandler = new RequestHandler();
     private static BasicDataSource dataSource = null;
 
     public void init() {
@@ -158,7 +159,7 @@ public class FrontServlet extends HttpServlet {
         if (referer != null) {
             switch (referer) {
                 case "/library/addReader":
-                    Reader reader = RequestHandler.getReaderFromReq(request);
+                    Reader reader = requestHandler.getReaderFromReq(request);
                     if (readerService.addReader(reader, dataSource)) {
                         request.setAttribute("result", "Пользователь создан успешно.");
                     } else {
@@ -167,7 +168,7 @@ public class FrontServlet extends HttpServlet {
                     getServletContext().getRequestDispatcher("/result.jsp").forward(request, response);
                     break;
                 case "/library/addBook":
-                    Book book = RequestHandler.getBookFromReq(request);
+                    Book book = requestHandler.getBookFromReq(request);
                     if (bookService.addBook(book, dataSource)) {
                         request.setAttribute("result", "Книга добавлена успешно.");
                     } else {
@@ -176,13 +177,13 @@ public class FrontServlet extends HttpServlet {
                     getServletContext().getRequestDispatcher("/result.jsp").forward(request, response);
                     break;
                 case "/library/issueBook":
-                    Issue issue = RequestHandler.getNewIssueFromReq(request);
+                    Issue issue = requestHandler.getNewIssueFromReq(request);
                     List<BookCopy> givenBooks = issueService.addNewIssue(issue, dataSource);
                     request.setAttribute("givenBooks", givenBooks);
                     getServletContext().getRequestDispatcher("/givenBooks.jsp").forward(request, response);
                     break;
                 case "/library/returnBook":
-                    Issue returned = RequestHandler.getReturnedFromReq(request);
+                    Issue returned = requestHandler.getReturnedFromReq(request);
                     if (issueService.finishIssue(returned, dataSource)) {
                         request.setAttribute("result", "Возврат книг проведён успешно");
                     } else {

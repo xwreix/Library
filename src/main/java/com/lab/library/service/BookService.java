@@ -16,7 +16,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class BookService {
-    private static final Logger logger = Logger.getLogger(BookService.class.getName());
+    private final Logger logger = Logger.getLogger(BookService.class.getName());
+    private final AuthorDao authorDao = new AuthorDao();
+    private final BookDao bookDao = new BookDao();
 
     public BookService() {
     }
@@ -27,38 +29,38 @@ public class BookService {
         try (Connection connection = dataSource.getConnection()) {
             connection.setAutoCommit(false);
 
-            ResultSet resultSet = BookDao.insertIntoBook(connection, book);
+            ResultSet resultSet = bookDao.insertIntoBook(connection, book);
             if (resultSet.next()) {
                 book.setId(resultSet.getInt(1));
             }
 
             for (InputStream cover : book.getCovers()) {
-                BookDao.insertIntoCover(connection, book.getId(), cover);
+                bookDao.insertIntoCover(connection, book.getId(), cover);
             }
 
             for (int genre : book.getGenresId()) {
-                BookDao.insertIntoGenre(connection, book.getId(), genre);
+                bookDao.insertIntoGenre(connection, book.getId(), genre);
             }
 
             for (Author author : book.getAuthors()) {
-                resultSet = AuthorDao.selectAuthorId(connection, author);
+                resultSet = authorDao.selectAuthorId(connection, author);
 
                 int authorId = 0;
                 if (!resultSet.next()) {
-                    resultSet = AuthorDao.insertAuthor(connection, author);
+                    resultSet = authorDao.insertAuthor(connection, author);
                     resultSet.next();
                 }
                 authorId = resultSet.getInt(1);
                 author.setId(authorId);
 
-                AuthorDao.insertAuthorBook(connection, author, book);
+                authorDao.insertAuthorBook(connection, author, book);
                 for (InputStream photo : author.getPhotos()) {
-                    AuthorDao.insertPhotos(connection, author.getId(), photo);
+                    authorDao.insertPhotos(connection, author.getId(), photo);
                 }
             }
 
             for (int i = 0; i < book.getTotalAmount(); i++) {
-                BookDao.insertIntoBookCopy(connection, book);
+                bookDao.insertIntoBookCopy(connection, book);
             }
 
 
@@ -75,7 +77,7 @@ public class BookService {
         Map<Integer, String> genres = new HashMap<>();
 
         try (Connection connection = dataSource.getConnection()) {
-            ResultSet resultSet = BookDao.selectGenres(connection);
+            ResultSet resultSet = bookDao.selectGenres(connection);
 
             while (resultSet.next()) {
                 genres.put(resultSet.getInt(1), resultSet.getString(2));
@@ -91,7 +93,7 @@ public class BookService {
         List<Book> books = new ArrayList<>();
 
         try (Connection connection = dataSource.getConnection()) {
-            ResultSet resultSet = BookDao.selectFromBook(connection);
+            ResultSet resultSet = bookDao.selectFromBook(connection);
 
             while (resultSet.next()) {
                 Book book = new Book();
@@ -99,16 +101,16 @@ public class BookService {
                 book.setNameInRus(resultSet.getString("nameInRus"));
                 book.setYear(resultSet.getInt("publYear"));
 
-                ResultSet set = BookDao.selectTotal(connection, book.getId());
+                ResultSet set = bookDao.selectTotal(connection, book.getId());
                 set.next();
                 book.setTotalAmount(set.getInt(1));
 
-                set = BookDao.selectNotAvailable(connection, book.getId());
+                set = bookDao.selectNotAvailable(connection, book.getId());
                 set.next();
                 book.setAvailableAmount(book.getTotalAmount() - set.getInt(1));
 
                 List<String> genres = new ArrayList<>();
-                set = BookDao.selectBookGenres(connection, book);
+                set = bookDao.selectBookGenres(connection, book);
                 while (set.next()) {
                     genres.add(set.getString("name"));
                 }
@@ -128,14 +130,14 @@ public class BookService {
         Status status = null;
 
         try (Connection connection = dataSource.getConnection()) {
-            ResultSet resultSet = BookDao.selectBookId(connection, name);
+            ResultSet resultSet = bookDao.selectBookId(connection, name);
             int id = 0;
             if (resultSet.next()) {
                 id = resultSet.getInt(1);
             }
 
 
-            resultSet = BookDao.selectTotal(connection, id);
+            resultSet = bookDao.selectTotal(connection, id);
             int total = 0;
             if (resultSet.next()) {
                 total = resultSet.getInt(1);
@@ -144,7 +146,7 @@ public class BookService {
             if (total == 0) {
                 status = Status.NON_EXISTENT;
             } else {
-                resultSet = BookDao.selectNotAvailable(connection, id);
+                resultSet = bookDao.selectNotAvailable(connection, id);
                 int available = 0;
                 if (resultSet.next()) {
                     available = total - resultSet.getInt(1);
@@ -167,7 +169,7 @@ public class BookService {
         double result = 0;
 
         try (Connection connection = dataSource.getConnection()) {
-            ResultSet resultSet = BookDao.selectCost(connection, name);
+            ResultSet resultSet = bookDao.selectCost(connection, name);
             if (resultSet.next()) {
                 result = resultSet.getDouble(1);
             }
@@ -183,13 +185,13 @@ public class BookService {
         List<PopularBook> popular = new ArrayList<>();
 
         try (Connection connection = dataSource.getConnection()) {
-            ResultSet resultSet = BookDao.selectPopular(connection);
+            ResultSet resultSet = bookDao.selectPopular(connection);
             while (resultSet.next()) {
                 PopularBook popularBook = new PopularBook();
                 int bookId = resultSet.getInt(1);
                 popularBook.setAmount(resultSet.getInt(2));
 
-                ResultSet result = BookDao.selectCover(connection, bookId);
+                ResultSet result = bookDao.selectCover(connection, bookId);
                 while (result.next()) {
                     InputStream inputStream = result.getBinaryStream(1);
                     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
@@ -209,7 +211,7 @@ public class BookService {
                     popularBook.setBase64Image(base64Image);
                 }
 
-                result = BookDao.selectRating(connection, bookId);
+                result = bookDao.selectRating(connection, bookId);
                 if (result.next()) {
                     popularBook.setRating(result.getDouble(1));
                 }
@@ -227,11 +229,11 @@ public class BookService {
         BookCopy bookCopy = new BookCopy();
 
         try (Connection connection = dataSource.getConnection()) {
-            ResultSet resultSet = BookDao.isCopyExisting(connection, id);
+            ResultSet resultSet = bookDao.isCopyExisting(connection, id);
             if (resultSet.next()) {
-                resultSet = BookDao.isIssued(connection, id);
+                resultSet = bookDao.isIssued(connection, id);
                 if (!resultSet.next()) {
-                    resultSet = BookDao.selectCopyInfo(connection, id);
+                    resultSet = bookDao.selectCopyInfo(connection, id);
                     bookCopy.setId(id);
                     if (resultSet.next()) {
                         bookCopy.setName(resultSet.getString(1));
@@ -252,16 +254,16 @@ public class BookService {
         return bookCopy;
     }
 
-    public boolean writeOff(int id, DataSource dataSource){
+    public boolean writeOff(int id, DataSource dataSource) {
         boolean result = true;
 
         try (Connection connection = dataSource.getConnection()) {
             connection.setAutoCommit(false);
-            ResultSet resultSet = BookDao.selectCopyInfo(connection, id);
-            if(resultSet.next()){
-                BookDao.insertArchive(connection, id, resultSet.getString(2), resultSet.getString(1));
+            ResultSet resultSet = bookDao.selectCopyInfo(connection, id);
+            if (resultSet.next()) {
+                bookDao.insertArchive(connection, id, resultSet.getString(2), resultSet.getString(1));
             }
-            BookDao.deleteCopy(connection, id);
+            bookDao.deleteCopy(connection, id);
             connection.commit();
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Writing off exception ", e);

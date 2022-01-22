@@ -17,7 +17,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class ReaderService {
-    private static final Logger logger = Logger.getLogger(ReaderService.class.getName());
+    private final Logger logger = Logger.getLogger(ReaderService.class.getName());
+    ReaderDao readerDao = new ReaderDao();
 
     public ReaderService() {
     }
@@ -26,7 +27,7 @@ public class ReaderService {
         boolean result = true;
 
         try (Connection connection = dataSource.getConnection()) {
-            ReaderDao.insertReader(connection, reader);
+            readerDao.insertReader(connection, reader);
         } catch (SQLException e) {
             logger.log(Level.WARNING, "Insert reader exception ", e);
             result = false;
@@ -39,7 +40,7 @@ public class ReaderService {
         List<Reader> readers = new ArrayList<>();
 
         try (Connection connection = dataSource.getConnection()) {
-            ResultSet resultSet = ReaderDao.selectReaders(connection);
+            ResultSet resultSet = readerDao.selectReaders(connection);
 
             while (resultSet.next()) {
                 readers.add(new Reader(resultSet.getInt("id"),
@@ -60,13 +61,13 @@ public class ReaderService {
         Status status = null;
 
         try (Connection connection = dataSource.getConnection()) {
-            ResultSet resultSet = ReaderDao.selectReaderId(connection, email);
+            ResultSet resultSet = readerDao.selectReaderId(connection, email);
 
             if (!resultSet.next()) {
                 status = Status.NON_EXISTENT;
             } else {
                 int readerId = resultSet.getInt("id");
-                resultSet = ReaderDao.selectNotReturned(connection, readerId);
+                resultSet = readerDao.selectNotReturned(connection, readerId);
                 if (resultSet.next()) {
                     if (resultSet.getInt(1) == 0) {
                         status = Status.AVAIlABLE;
@@ -87,7 +88,7 @@ public class ReaderService {
         List<BookCopy> result = new ArrayList<>();
 
         try (Connection connection = dataSource.getConnection()) {
-            ResultSet resultSet = ReaderDao.selectAllBooks(connection, email);
+            ResultSet resultSet = readerDao.selectAllBooks(connection, email);
 
             while (resultSet.next()) {
                 String date = String.valueOf(resultSet.getDate("preliminaryDate"));
@@ -106,8 +107,9 @@ public class ReaderService {
 
     public void sendMails(DataSource dataSource) {
         try (Connection connection = dataSource.getConnection()) {
-            ResultSet resultSet = ReaderDao.selectOverdue(connection);
+            ResultSet resultSet = readerDao.selectOverdue(connection);
             while (resultSet.next()) {
+                SendMail sendMail = new SendMail();
                 String email = resultSet.getString(1);
                 String days = resultSet.getString(2);
                 String[] parts = days.split(" ");
@@ -116,7 +118,7 @@ public class ReaderService {
                 if (amount > 5) {
                     StringBuilder message = new StringBuilder("Книги которые необходимо вернуть: ");
                     double total = 0;
-                    ResultSet result = ReaderDao.selectOverdueBooks(connection, email);
+                    ResultSet result = readerDao.selectOverdueBooks(connection, email);
                     while (result.next()) {
                         String name = result.getString(1);
                         double cost = result.getDouble(2);
@@ -124,14 +126,14 @@ public class ReaderService {
                         message.append(name).append(" ");
                     }
                     message.append("Штраф: ").append(total);
-                    SendMail.send(message.toString(), email);
-                } else if(amount == 0){
+                    sendMail.send(message.toString(), email);
+                } else if (amount == 0) {
                     StringBuilder message = new StringBuilder("Книги которые необходимо вернуть: ");
-                    ResultSet result = ReaderDao.selectOverdueBooks(connection, email);
-                    while (result.next()){
+                    ResultSet result = readerDao.selectOverdueBooks(connection, email);
+                    while (result.next()) {
                         message.append(result.getString(1)).append(" ");
                     }
-                    SendMail.send(message.toString(), email);
+                    sendMail.send(message.toString(), email);
                 }
 
             }

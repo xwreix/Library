@@ -10,7 +10,7 @@ import java.io.IOException;
 import java.util.Properties;
 
 public class SendMail {
-    public static void send(String text, String email) throws IOException, MessagingException {
+    public void send(String text, String email) throws IOException, MessagingException {
         final Properties properties = new Properties();
         properties.load(SendMail.class.getClassLoader().getResourceAsStream("mail.properties"));
         String user = properties.getProperty("mail.smtps.user");

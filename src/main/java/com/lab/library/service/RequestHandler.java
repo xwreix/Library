@@ -17,9 +17,9 @@ import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 public class RequestHandler {
-    private static final Logger logger = Logger.getLogger(RequestHandler.class.getName());
+    private final Logger logger = Logger.getLogger(RequestHandler.class.getName());
 
-    public static Reader getReaderFromReq(HttpServletRequest request) {
+    public Reader getReaderFromReq(HttpServletRequest request) {
         Reader reader = new Reader();
 
         reader.setSurname(request.getParameter("surname"));
@@ -33,7 +33,7 @@ public class RequestHandler {
         return reader;
     }
 
-    public static Book getBookFromReq(HttpServletRequest request) {
+    public Book getBookFromReq(HttpServletRequest request) {
         Book book = new Book();
 
         book.setNameInRus(request.getParameter("nameInRus"));
@@ -116,7 +116,7 @@ public class RequestHandler {
         return book;
     }
 
-    public static Issue getNewIssueFromReq(HttpServletRequest request) {
+    public Issue getNewIssueFromReq(HttpServletRequest request) {
         Issue issue = new Issue();
 
         issue.setReaderEmail(request.getParameter("email"));
@@ -137,7 +137,7 @@ public class RequestHandler {
         return issue;
     }
 
-    public static Issue getReturnedFromReq(HttpServletRequest request) {
+    public Issue getReturnedFromReq(HttpServletRequest request) {
         Issue issue = new Issue();
 
         issue.setReaderEmail(request.getParameter("email"));
@@ -180,7 +180,7 @@ public class RequestHandler {
         return issue;
     }
 
-    private static String setNull(String param) {
+    private String setNull(String param) {
         if (Objects.equals(param, "")) {
             param = null;
         }
