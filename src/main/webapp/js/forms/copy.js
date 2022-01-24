@@ -11,6 +11,10 @@ let copy = {
     getInfo() {
         if (!isEmpty(this.id.value.trim())) {
             $.get("/library/getCopyInfo", {id: copy.id.value}, function (responseJson) {
+                if(![responseJson['valid']]){
+                    alert("Не удалось получить информацию о книгах");
+                    return false;
+                }
                 if (responseJson['id'] === 0) {
                     showError(copy.id, "Книга выдана читателю");
                     $('#info').html('');

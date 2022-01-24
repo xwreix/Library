@@ -20,7 +20,7 @@
     <a href="${pageContext.request.contextPath}/library/profitability" class="button">Доходность</a>
     <a href="${pageContext.request.contextPath}/library/send" class="button">Отправить уведомления</a>
 </div>
-
+<p>${requestScope.message}</p>
 <jsp:include page="popularBooks.jsp"/>
 <jsp:include page="bookList.jsp"/>
 </body>

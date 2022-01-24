@@ -15,16 +15,24 @@ public class AuthorDao {
     public final String INSERT_AUTHOR_BOOK = "INSERT INTO authorsBooks(authorId, bookId) VALUES (?, ?)";
     public final String INSERT_PHOTO = "INSERT INTO authorPhoto (authorId, img) VALUES (?, ?)";
 
-    public ResultSet selectAuthorId(Connection connection, Author author) throws SQLException {
+    public int selectAuthorId(Connection connection, Author author) throws SQLException {
         PreparedStatement preparedStatement = connection.prepareStatement(SELECT_AUTHOR_ID);
         preparedStatement.setString(1, author.getName());
-        return preparedStatement.executeQuery();
+        ResultSet resultSet = preparedStatement.executeQuery();
+        if (resultSet.next()) {
+            return resultSet.getInt(1);
+        } else return 0;
     }
 
-    public ResultSet insertAuthor(Connection connection, Author author) throws SQLException {
+    public int insertAuthor(Connection connection, Author author) throws SQLException {
+        int id = 0;
         PreparedStatement preparedStatement = connection.prepareStatement(INSERT_AUTHOR);
         preparedStatement.setString(1, author.getName());
-        return preparedStatement.executeQuery();
+        ResultSet resultSet = preparedStatement.executeQuery();
+        if (resultSet.next()) {
+            id = resultSet.getInt(1);
+        }
+        return id;
     }
 
     public void insertAuthorBook(Connection connection, Author author, Book book) throws SQLException {

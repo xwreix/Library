@@ -1,9 +1,15 @@
 package com.lab.library.dao;
 
 import com.lab.library.beans.Book;
+import com.lab.library.beans.BookCopy;
+import com.lab.library.beans.PopularBook;
 
 import java.io.InputStream;
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class BookDao {
     private final String INSERT_INTO_BOOK = "INSERT INTO book(nameInRus, originalName, cost," +
@@ -44,7 +50,8 @@ public class BookDao {
     private final String INSERT_ARCHIVE = "insert into archive(bookcopyid, damage, name) values (?, ?, ?)";
     private final String DELETE_COPY = "delete from bookcopy where id = ?";
 
-    public ResultSet insertIntoBook(Connection connection, Book book) throws SQLException {
+    public int insertIntoBook(Connection connection, Book book) throws SQLException {
+        int id = 0;
         PreparedStatement statement = connection.prepareStatement(INSERT_INTO_BOOK);
         statement.setString(1, book.getNameInRus());
         statement.setString(2, book.getOriginalName());
@@ -63,7 +70,12 @@ public class BookDao {
             statement.setInt(6, book.getPageAmount());
         }
 
-        return statement.executeQuery();
+        ResultSet resultSet = statement.executeQuery();
+        if (resultSet.next()) {
+            id = resultSet.getInt(1);
+        }
+
+        return id;
     }
 
     public void insertIntoCover(Connection connection, int bookId, InputStream cover) throws SQLException {
@@ -89,79 +101,169 @@ public class BookDao {
         preparedStatement.executeUpdate();
     }
 
-    public ResultSet selectGenres(Connection connection) throws SQLException {
+    public Map<Integer, String> selectGenres(Connection connection) throws SQLException {
+        Map<Integer, String> genres = new HashMap<>();
+
         PreparedStatement preparedStatement = connection.prepareStatement(SELECT_GENRES);
-        return preparedStatement.executeQuery();
+        ResultSet resultSet = preparedStatement.executeQuery();
+        while (resultSet.next()) {
+            genres.put(resultSet.getInt(1), resultSet.getString(2));
+        }
+
+        return genres;
     }
 
-    public ResultSet selectFromBook(Connection connection) throws SQLException {
+    public List<Book> selectFromBook(Connection connection) throws SQLException {
+        List<Book> books = new ArrayList<>();
+
         PreparedStatement preparedStatement = connection.prepareStatement(SELECT_FROM_BOOK);
-        return preparedStatement.executeQuery();
+        ResultSet resultSet = preparedStatement.executeQuery();
+        while (resultSet.next()) {
+            Book book = new Book();
+            book.setId(resultSet.getInt("id"));
+            book.setNameInRus(resultSet.getString("nameInRus"));
+            book.setYear(resultSet.getInt("publYear"));
+            books.add(book);
+        }
+
+        return books;
     }
 
-    public ResultSet selectTotal(Connection connection, int id) throws SQLException {
+    public int selectTotal(Connection connection, int id) throws SQLException {
+        int result = 0;
+
         PreparedStatement preparedStatement = connection.prepareStatement(SELECT_TOTAL);
         preparedStatement.setInt(1, id);
-        return preparedStatement.executeQuery();
+        ResultSet resultSet = preparedStatement.executeQuery();
+        if (resultSet.next()) {
+            result = resultSet.getInt(1);
+        }
+
+        return result;
     }
 
-    public ResultSet selectNotAvailable(Connection connection, int id) throws SQLException {
+    public int selectNotAvailable(Connection connection, int id) throws SQLException {
+        int result = 0;
+
         PreparedStatement preparedStatement = connection.prepareStatement(SELECT_NOT_AVALABLE);
         preparedStatement.setInt(1, id);
-        return preparedStatement.executeQuery();
+        ResultSet resultSet = preparedStatement.executeQuery();
+        if (resultSet.next()) {
+            result = resultSet.getInt(1);
+        }
+
+        return result;
     }
 
-    public ResultSet selectBookGenres(Connection connection, Book book) throws SQLException {
+    public List<String> selectBookGenres(Connection connection, Book book) throws SQLException {
+        List<String> genres = new ArrayList<>();
+
         PreparedStatement preparedStatement = connection.prepareStatement(SELECT_BOOK_GENRES);
         preparedStatement.setInt(1, book.getId());
-        return preparedStatement.executeQuery();
+        ResultSet resultSet = preparedStatement.executeQuery();
+        while (resultSet.next()) {
+            genres.add(resultSet.getString("name"));
+        }
+
+        return genres;
     }
 
-    public ResultSet selectBookId(Connection connection, String name) throws SQLException {
+    public int selectBookId(Connection connection, String name) throws SQLException {
+        int id = 0;
         PreparedStatement preparedStatement = connection.prepareStatement(SELECT_BOOK_ID);
         preparedStatement.setString(1, name);
-        return preparedStatement.executeQuery();
+        ResultSet resultSet = preparedStatement.executeQuery();
+        if (resultSet.next()) {
+            id = resultSet.getInt(1);
+        }
+
+        return id;
     }
 
-    public ResultSet selectCost(Connection connection, String name) throws SQLException {
+    public double selectCost(Connection connection, String name) throws SQLException {
+        double result = 0;
         PreparedStatement preparedStatement = connection.prepareStatement(SELECT_COST);
         preparedStatement.setString(1, name);
-        return preparedStatement.executeQuery();
+        ResultSet resultSet = preparedStatement.executeQuery();
+        if (resultSet.next()) {
+            result = resultSet.getDouble(1);
+        }
+
+        return result;
     }
 
-    public ResultSet selectPopular(Connection connection) throws SQLException {
+    public List<PopularBook> selectPopular(Connection connection) throws SQLException {
+        List<PopularBook> popular = new ArrayList<>();
         PreparedStatement preparedStatement = connection.prepareStatement(SELECT_POPULAR);
-        return preparedStatement.executeQuery();
+        ResultSet resultSet = preparedStatement.executeQuery();
+        while (resultSet.next()) {
+            PopularBook popularBook = new PopularBook();
+            popularBook.setId(resultSet.getInt(1));
+            popularBook.setAmount(resultSet.getInt(2));
+            popular.add(popularBook);
+        }
+
+        return  popular;
     }
 
-    public ResultSet selectCover(Connection connection, int id) throws SQLException {
+    public InputStream selectCover(Connection connection, int id) throws SQLException {
+        InputStream cover = null;
         PreparedStatement preparedStatement = connection.prepareStatement(SELECT_COVER);
         preparedStatement.setInt(1, id);
-        return preparedStatement.executeQuery();
+        ResultSet resultSet = preparedStatement.executeQuery();
+        if(resultSet.next()){
+            cover = resultSet.getBinaryStream(1);
+        }
+
+        return cover;
     }
 
-    public ResultSet selectRating(Connection connection, int id) throws SQLException {
+    public double selectRating(Connection connection, int id) throws SQLException {
+        double rating = 0;
         PreparedStatement preparedStatement = connection.prepareStatement(SELECT_RATING);
         preparedStatement.setInt(1, id);
-        return preparedStatement.executeQuery();
+        ResultSet resultSet = preparedStatement.executeQuery();
+        if(resultSet.next()){
+            rating = resultSet.getDouble(1);
+        }
+
+        return rating;
     }
 
-    public ResultSet selectCopyInfo(Connection connection, int id) throws SQLException {
+    public BookCopy selectCopyInfo(Connection connection, BookCopy copy) throws SQLException {
         PreparedStatement preparedStatement = connection.prepareStatement(SELECT_COPY_INFO);
-        preparedStatement.setInt(1, id);
-        return preparedStatement.executeQuery();
+        preparedStatement.setInt(1, copy.getId());
+        ResultSet resultSet = preparedStatement.executeQuery();
+        if(resultSet.next()){
+            copy.setName(resultSet.getString(1));
+            copy.setDamage(resultSet.getString(2));
+        }
+
+        return copy;
     }
 
-    public ResultSet isIssued(Connection connection, int id) throws SQLException {
+    public boolean isIssued(Connection connection, int id) throws SQLException {
+        boolean result = false;
         PreparedStatement preparedStatement = connection.prepareStatement(IS_ISSUED);
         preparedStatement.setInt(1, id);
-        return preparedStatement.executeQuery();
+        ResultSet resultSet = preparedStatement.executeQuery();
+        if(resultSet.next()){
+            result = true;
+        }
+
+        return result;
     }
 
-    public ResultSet isCopyExisting(Connection connection, int id) throws SQLException {
+    public boolean isCopyExisting(Connection connection, int id) throws SQLException {
+        boolean result = false;
         PreparedStatement preparedStatement = connection.prepareStatement(IS_COPY_EXISTING);
         preparedStatement.setInt(1, id);
-        return preparedStatement.executeQuery();
+        ResultSet resultSet = preparedStatement.executeQuery();
+        if(resultSet.next()){
+            result = true;
+        }
+
+        return result;
     }
 
     public void insertArchive(Connection connection, int id, String damage, String name) throws SQLException {

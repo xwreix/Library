@@ -65,6 +65,11 @@ let finishIssue = {
         let readerBooks = [];
 
         $.get("/library/getGivenBooks", {readerEmail: value}, function (responseJson) {
+            if (!responseJson) {
+                alert("Не удаётся получить информацию о книгах читателя");
+                return false;
+            }
+
             $.each(responseJson, function (index, book) {
                 let bookElem = {
                     name: book.name,

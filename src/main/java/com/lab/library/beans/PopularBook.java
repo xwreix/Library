@@ -1,9 +1,18 @@
 package com.lab.library.beans;
 
 public class PopularBook {
+    private int id;
     private String base64Image;
     private int amount;
     private double rating;
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
 
     public String getBase64Image() {
         return base64Image;

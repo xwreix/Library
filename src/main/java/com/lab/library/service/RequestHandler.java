@@ -12,12 +12,9 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Objects;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 public class RequestHandler {
-    private final Logger logger = Logger.getLogger(RequestHandler.class.getName());
 
     public Reader getReaderFromReq(HttpServletRequest request) {
         Reader reader = new Reader();
@@ -33,7 +30,7 @@ public class RequestHandler {
         return reader;
     }
 
-    public Book getBookFromReq(HttpServletRequest request) {
+    public Book getBookFromReq(HttpServletRequest request) throws ServletException, IOException {
         Book book = new Book();
 
         book.setNameInRus(request.getParameter("nameInRus"));
@@ -69,19 +66,16 @@ public class RequestHandler {
             author.setName(request.getParameter(param));
             String photosParam = "authorPhotos" + param.substring(6) + "[]";
             List<InputStream> photos = new ArrayList<>();
-            try {
-                List<Part> parts = (List<Part>) request.getParts();
-                for (Part part : parts) {
-                    if (part.getName().equalsIgnoreCase(photosParam)) {
-                        InputStream inputStream = part.getInputStream();
-                        byte[] bytes = new byte[inputStream.available()];
-                        if (bytes.length != 0) {
-                            photos.add(inputStream);
-                        }
+
+            List<Part> parts = (List<Part>) request.getParts();
+            for (Part part : parts) {
+                if (part.getName().equalsIgnoreCase(photosParam)) {
+                    InputStream inputStream = part.getInputStream();
+                    byte[] bytes = new byte[inputStream.available()];
+                    if (bytes.length != 0) {
+                        photos.add(inputStream);
                     }
                 }
-            } catch (IOException | ServletException e) {
-                e.printStackTrace();
             }
             author.setPhotos(photos);
 
@@ -90,16 +84,12 @@ public class RequestHandler {
         book.setAuthors(authors);
 
         List<InputStream> covers = new ArrayList<>();
-        try {
-            List<Part> parts = (List<Part>) request.getParts();
+        List<Part> parts = (List<Part>) request.getParts();
 
-            for (Part part : parts) {
-                if (part.getName().equalsIgnoreCase("covers[]")) {
-                    covers.add(part.getInputStream());
-                }
+        for (Part part : parts) {
+            if (part.getName().equalsIgnoreCase("covers[]")) {
+                covers.add(part.getInputStream());
             }
-        } catch (IOException | ServletException e) {
-            logger.log(Level.SEVERE, "Processing parts exception ", e);
         }
         book.setCovers(covers);
 
@@ -137,7 +127,7 @@ public class RequestHandler {
         return issue;
     }
 
-    public Issue getReturnedFromReq(HttpServletRequest request) {
+    public Issue getReturnedFromReq(HttpServletRequest request) throws ServletException, IOException {
         Issue issue = new Issue();
 
         issue.setReaderEmail(request.getParameter("email"));
@@ -155,21 +145,18 @@ public class RequestHandler {
                     bookCopy.setRating(Integer.parseInt(request.getParameter("rating" + el.substring(4))));
                 }
                 List<InputStream> photos = new ArrayList<>();
-                try {
-                    List<Part> parts = (List<Part>) request.getParts();
-                    for (Part part : parts) {
-                        if (part.getName().equalsIgnoreCase("damagePhotos" + el.substring(4) + "[]")) {
-                            InputStream inputStream = part.getInputStream();
-                            byte[] bytes = new byte[inputStream.available()];
-                            if (bytes.length != 0) {
-                                photos.add(inputStream);
-                            }
+                List<Part> parts = (List<Part>) request.getParts();
+                for (Part part : parts) {
+                    if (part.getName().equalsIgnoreCase("damagePhotos" + el.substring(4) + "[]")) {
+                        InputStream inputStream = part.getInputStream();
+                        byte[] bytes = new byte[inputStream.available()];
+                        if (bytes.length != 0) {
+                            photos.add(inputStream);
                         }
                     }
-                    bookCopy.setDamagePhotos(photos);
-                } catch (ServletException | IOException e) {
-                    logger.log(Level.SEVERE, "Getting parts exception ", e);
                 }
+                bookCopy.setDamagePhotos(photos);
+
                 books.add(bookCopy);
             }
         }

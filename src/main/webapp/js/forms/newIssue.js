@@ -121,13 +121,19 @@ let newIssue = {
 
         for (let i = 0; i < amount; i++) {
             $.get("/library/getCost", {bookName: newIssue.books[i].value.trim()}, function (responseJson) {
-                total = 0;
-                let value = responseJson['value'];
-                total = +value * 30;
+                if (responseJson['valid']) {
+                    total = 0;
+                    let value = responseJson['value'];
+                    total = +value * 30;
 
-                total -= total / 100 * discount;
-                total += +newIssue.cost.value;
-                newIssue.cost.setAttribute('value', total);
+                    total -= total / 100 * discount;
+                    total += +newIssue.cost.value;
+                    newIssue.cost.setAttribute('value', total);
+                } else {
+                    alert(responseJson['value']);
+                    return false;
+                }
+
             });
         }
     },

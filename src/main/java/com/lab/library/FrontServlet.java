@@ -11,6 +11,7 @@ import org.apache.commons.dbcp2.BasicDataSource;
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
+import javax.mail.MessagingException;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
@@ -22,6 +23,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.Date;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Properties;
 import java.util.logging.Level;
@@ -53,12 +55,24 @@ public class FrontServlet extends HttpServlet {
                 url = "/addReader.jsp";
                 break;
             case ("/library/addBook"):
-                url = "/addBook.jsp";
-                request.setAttribute("genres", bookService.selectGenres(dataSource));
+                try {
+                    request.setAttribute("genres", bookService.selectGenres(dataSource));
+                    url = "/addBook.jsp";
+                } catch (SQLException e) {
+                    logger.log(Level.SEVERE, "Selecting genres exception", e);
+                    request.setAttribute("result", "Не удалось создать пользователя.");
+                    url = "/result.jsp";
+                }
                 break;
             case ("/library/readerList"):
-                url = "/readerList.jsp";
-                request.setAttribute("readers", readerService.selectReaders(dataSource));
+                try {
+                    request.setAttribute("readers", readerService.selectReaders(dataSource));
+                    url = "/readerList.jsp";
+                } catch (SQLException e) {
+                    logger.log(Level.SEVERE, "Select reader exception", e);
+                    request.setAttribute("result", "Не удалось получить список читателей");
+                    url = "/result.jsp";
+                }
                 break;
             case ("/library/issueBook"):
                 url = "/issueBook.jsp";
@@ -70,17 +84,23 @@ public class FrontServlet extends HttpServlet {
                 url = "/writeOff.jsp";
                 break;
             case ("/library/checkReaderExistence"):
-                status = readerService.checkReader(request.getParameter("readerEmail"), dataSource);
-                if (status == Status.AVAIlABLE) {
-                    valid = true;
-                } else if (status == Status.NON_EXISTENT) {
-                    message = "Читатель не существует";
-                } else if (status == Status.LOCKED) {
-                    message = "Читатель не вернул все книги";
+                try {
+                    status = readerService.checkReader(request.getParameter("readerEmail"), dataSource);
+                    if (status == Status.AVAIlABLE) {
+                        valid = true;
+                    } else if (status == Status.NON_EXISTENT) {
+                        message = "Читатель не существует";
+                    } else if (status == Status.LOCKED) {
+                        message = "Читатель не вернул все книги";
+                    }
+                } catch (SQLException e) {
+                    logger.log(Level.SEVERE, "Check reader exception", e);
+                    message = "Не удаётся получить информацию о читателе";
                 }
                 sendJSON(valid, message, response);
                 break;
             case ("/library/checkBook"):
+                try {
                     status = bookService.checkBook(request.getParameter("bookName"), dataSource);
                     if (status == Status.AVAIlABLE) {
                         valid = true;
@@ -89,49 +109,105 @@ public class FrontServlet extends HttpServlet {
                     } else if (status == Status.LOCKED) {
                         message = "В наличии нет доступных экзмепляров";
                     }
+                } catch (SQLException e) {
+                    logger.log(Level.SEVERE, "Checking book exception ", e);
+                    message = "Не удаётся получить информацию о книгах";
+                }
                 sendJSON(valid, message, response);
                 break;
             case ("/library/getCost"):
-                double cost = bookService.selectCost(request.getParameter("bookName"), dataSource);
-                sendJSON(true, String.valueOf(cost), response);
+                try {
+                    message = String.valueOf(bookService.selectCost(request.getParameter("bookName"), dataSource));
+                    valid = true;
+                } catch (SQLException e) {
+                    logger.log(Level.SEVERE, "Selecting cost exception ", e);
+                    message = "Не удаётся получить информацию о стоимости";
+                }
+                sendJSON(valid, message, response);
                 break;
             case ("/library/countGivenBooks"):
-                status = readerService.checkReader(request.getParameter("readerEmail"), dataSource);
-                if (status == Status.AVAIlABLE) {
-                    message = "У читателя нет книг для возврата";
-                } else if (status == Status.NON_EXISTENT) {
-                    message = "Читатель не существует";
-                } else if (status == Status.LOCKED) {
-                    valid = true;
+                try {
+                    status = readerService.checkReader(request.getParameter("readerEmail"), dataSource);
+                    if (status == Status.AVAIlABLE) {
+                        message = "У читателя нет книг для возврата";
+                    } else if (status == Status.NON_EXISTENT) {
+                        message = "Читатель не существует";
+                    } else if (status == Status.LOCKED) {
+                        valid = true;
+                    }
+                } catch (SQLException e) {
+                    logger.log(Level.SEVERE, "Counting given books exception ", e);
+                    message = "Не удаётся получить информацию о книгах читателя";
                 }
                 sendJSON(valid, message, response);
                 break;
             case ("/library/getGivenBooks"):
-                List<BookCopy> books = readerService.selectAllBooks(request.getParameter("readerEmail"), dataSource);
-                sendObjJson(books, response);
+                try {
+                    List<BookCopy> books = readerService.selectAllBooks(request.getParameter("readerEmail"), dataSource);
+                    sendObjJson(books, response);
+                } catch (SQLException e) {
+                    logger.log(Level.SEVERE, "Selecting all books exception", e);
+                    sendObjJson(null, response);
+                }
                 break;
-            case("/library/profitability"):
+            case ("/library/profitability"):
                 url = "/profitability.jsp";
                 break;
             case ("/library/calcProfitability"):
-                Profitability profitability = issueService.calcProfit(Date.valueOf(request.getParameter("start")),
-                        Date.valueOf(request.getParameter("finish")), dataSource);
-                sendObjJson(profitability, response);
+                try {
+                    Profitability profitability = issueService.calcProfit(Date.valueOf(request.getParameter("start")),
+                            Date.valueOf(request.getParameter("finish")), dataSource);
+                    sendObjJson(profitability, response);
+                } catch (SQLException e) {
+                    logger.log(Level.SEVERE, "Calculating profitability exception ");
+                    sendObjJson(null, response);
+                }
                 break;
             case ("/library/getCopyInfo"):
-                BookCopy bookCopy = bookService.selectCopyInfo(Integer.parseInt(request.getParameter("id")), dataSource);
-                sendObjJson(bookCopy, response);
+                try {
+                    BookCopy bookCopy = bookService.selectCopyInfo(Integer.parseInt(request.getParameter("id")), dataSource);
+                    sendObjJson(bookCopy, response);
+                } catch (SQLException e) {
+                    logger.log(Level.SEVERE, "Selecting copy info exception ", e);
+                    sendObjJson(null, response);
+                }
                 break;
             case ("/library/send"):
-                readerService.sendMails(dataSource);
-                url = "/main.jsp";
-                request.setAttribute("booksImg", bookService.selectPopular(dataSource));
-                request.setAttribute("books", bookService.selectBooks(dataSource));
+                try {
+                    readerService.sendMails(dataSource);
+                    url = "/main.jsp";
+                    try {
+                        request.setAttribute("booksImg", bookService.selectPopular(dataSource));
+                    } catch (SQLException | IOException e) {
+                        logger.log(Level.SEVERE, "Selecting popular exception ", e);
+                        request.setAttribute("message", "Не удаётся получить данные о популярных книгах книгах");
+                    }
+                    try {
+                        request.setAttribute("books", bookService.selectBooks(dataSource));
+                    } catch (SQLException e) {
+                        logger.log(Level.SEVERE, "Selecting books exception ", e);
+                        request.setAttribute("message", "Не удаётся получить данные о книгах книгах");
+                    }
+                } catch (SQLException | MessagingException e) {
+                    logger.log(Level.SEVERE, "Sending message exception ", e);
+                    request.setAttribute("result", "Не удалось отправить уведомление");
+                    url = "/result.jsp";
+                }
                 break;
             case ("/library"):
                 url = "/main.jsp";
-                request.setAttribute("booksImg", bookService.selectPopular(dataSource));
-                request.setAttribute("books", bookService.selectBooks(dataSource));
+                try {
+                    request.setAttribute("booksImg", bookService.selectPopular(dataSource));
+                } catch (SQLException | IOException e) {
+                    logger.log(Level.SEVERE, "Selecting popular exception ", e);
+                    request.setAttribute("message", "Не удаётся получить данные о популярных книгах книгах");
+                }
+                try {
+                    request.setAttribute("books", bookService.selectBooks(dataSource));
+                } catch (SQLException e) {
+                    logger.log(Level.SEVERE, "Selecting books exception ", e);
+                    request.setAttribute("message", "Не удаётся получить данные о книгах книгах");
+                }
                 break;
         }
 
@@ -155,55 +231,77 @@ public class FrontServlet extends HttpServlet {
         } catch (URISyntaxException e) {
             logger.log(Level.SEVERE, "Referer exception ", e);
         }
+        String url = null;
 
         if (referer != null) {
             switch (referer) {
                 case "/library/addReader":
                     Reader reader = requestHandler.getReaderFromReq(request);
-                    if (readerService.addReader(reader, dataSource)) {
+                    try {
+                        readerService.addReader(reader, dataSource);
                         request.setAttribute("result", "Пользователь создан успешно.");
-                    } else {
+                    } catch (SQLException e) {
+                        logger.log(Level.WARNING, "Insert reader exception ", e);
                         request.setAttribute("result", "Не удалось создать пользователя.");
                     }
-                    getServletContext().getRequestDispatcher("/result.jsp").forward(request, response);
+                    url = "/result.jsp";
                     break;
                 case "/library/addBook":
-                    Book book = requestHandler.getBookFromReq(request);
-                    if (bookService.addBook(book, dataSource)) {
+                    try {
+                        Book book = requestHandler.getBookFromReq(request);
+                        bookService.addBook(book, dataSource);
                         request.setAttribute("result", "Книга добавлена успешно.");
-                    } else {
+                    } catch (SQLException | ServletException | IOException e) {
+                        logger.log(Level.SEVERE, "Adding book exception ", e);
                         request.setAttribute("result", "Не удалось добавить книгу");
                     }
-                    getServletContext().getRequestDispatcher("/result.jsp").forward(request, response);
+                    url = "/result.jsp";
                     break;
                 case "/library/issueBook":
                     Issue issue = requestHandler.getNewIssueFromReq(request);
-                    List<BookCopy> givenBooks = issueService.addNewIssue(issue, dataSource);
-                    request.setAttribute("givenBooks", givenBooks);
-                    getServletContext().getRequestDispatcher("/givenBooks.jsp").forward(request, response);
+                    try {
+                        List<BookCopy> givenBooks = issueService.addNewIssue(issue, dataSource);
+                        request.setAttribute("givenBooks", givenBooks);
+                        url = "/givenBooks.jsp";
+                    } catch (SQLException e) {
+                        logger.log(Level.WARNING, "Adding new issue exception ", e);
+                        request.setAttribute("result", "Не удалось создать заказ");
+                        url = "/result.jsp";
+                    }
                     break;
                 case "/library/returnBook":
-                    Issue returned = requestHandler.getReturnedFromReq(request);
-                    if (issueService.finishIssue(returned, dataSource)) {
+                    try {
+                        Issue returned = requestHandler.getReturnedFromReq(request);
+                        issueService.finishIssue(returned, dataSource);
                         request.setAttribute("result", "Возврат книг проведён успешно");
-                    } else {
+                    } catch (SQLException | ServletException | IOException e) {
+                        logger.log(Level.SEVERE, "Returning book exception ", e);
                         request.setAttribute("result", "Не удалось провести возврат книг");
                     }
-                    getServletContext().getRequestDispatcher("/result.jsp").forward(request, response);
+                    url = "/result.jsp";
                     break;
                 case "/library/writeOff":
-                    if(bookService.writeOff(Integer.parseInt(request.getParameter("copyId")), dataSource)){
+                    try {
+                        bookService.writeOff(Integer.parseInt(request.getParameter("copyId")), dataSource);
                         request.setAttribute("result", "Копия удалена");
-                    } else {
+                    } catch (SQLException e) {
+                        logger.log(Level.SEVERE, "Writing off exception ", e);
                         request.setAttribute("result", "Не удалось удалить копию");
                     }
-                    getServletContext().getRequestDispatcher("/result.jsp").forward(request, response);
+                    url = "/result.jsp";
                     break;
                 default:
-                    getServletContext().getRequestDispatcher("/result.jsp").forward(request, response);
+                    url = "/result.jsp";
             }
         }
 
+        if (url != null) {
+            try {
+                getServletContext().getRequestDispatcher(url).forward(request, response);
+            } catch (ServletException e) {
+                logger.log(Level.SEVERE, "Forward exception ", e);
+            }
+        }
     }
 
     public void destroy() {
@@ -224,7 +322,21 @@ public class FrontServlet extends HttpServlet {
         }
     }
 
-    private void sendObjJson(Object object, HttpServletResponse response){
+    private void sendJSONError(boolean flag, HttpServletResponse response) {
+        JsonObjectBuilder objectBuilder = Json.createObjectBuilder()
+                .add("flag", flag);
+        JsonObject jsonObject = objectBuilder.build();
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+
+        try {
+            response.getWriter().write(jsonObject.toString());
+        } catch (IOException e) {
+            logger.log(Level.SEVERE, "Writing JSON exception ", e);
+        }
+    }
+
+    private void sendObjJson(Object object, HttpServletResponse response) {
         String json = new Gson().toJson(object);
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");

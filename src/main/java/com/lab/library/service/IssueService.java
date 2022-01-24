@@ -11,15 +11,12 @@ import javax.sql.DataSource;
 import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.Date;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.Objects;
 
 public class IssueService {
-    private final Logger logger = Logger.getLogger(IssueService.class.getName());
     private final IssueDao issueDao = new IssueDao();
     private final ProfitDao profitDao = new ProfitDao();
     private final ReaderDao readerDao = new ReaderDao();
@@ -27,115 +24,74 @@ public class IssueService {
     public IssueService() {
     }
 
-    public List<BookCopy> addNewIssue(Issue issue, DataSource dataSource) {
+    public List<BookCopy> addNewIssue(Issue issue, DataSource dataSource) throws SQLException {
         List<BookCopy> givenBooks = new ArrayList<>();
 
-        try (Connection connection = dataSource.getConnection()) {
-            connection.setAutoCommit(false);
+        Connection connection = dataSource.getConnection();
+        connection.setAutoCommit(false);
 
-            ResultSet resultSet = readerDao.selectReaderId(connection, issue.getReaderEmail());
-            if (resultSet.next()) {
-                issue.setReaderId(resultSet.getInt(1));
-            }
+        issue.setReaderId(readerDao.selectReaderId(connection, issue.getReaderEmail()));
 
-            for (String book : issue.getBooks()) {
-                BookCopy bookCopy = new BookCopy();
-                resultSet = issueDao.selectBookCopy(connection, book);
-                if (resultSet.next()) {
-                    bookCopy.setId(resultSet.getInt(1));
-                    bookCopy.setDamage(resultSet.getString(2));
-                }
-                bookCopy.setDiscount(issue.getDiscount());
-                bookCopy.setName(book);
+        for (String book : issue.getBooks()) {
+            BookCopy bookCopy = issueDao.selectBookCopy(connection, book);
+            bookCopy.setDiscount(issue.getDiscount());
+            bookCopy.setName(book);
 
-                issueDao.insertIssue(connection, issue, bookCopy.getId());
+            issueDao.insertIssue(connection, issue, bookCopy.getId());
 
-                givenBooks.add(bookCopy);
-            }
-
-            connection.commit();
-        } catch (SQLException e) {
-            logger.log(Level.WARNING, "Adding new issue exception ", e);
+            givenBooks.add(bookCopy);
         }
 
+        connection.commit();
+        connection.close();
         return givenBooks;
     }
 
-    public boolean finishIssue(Issue issue, DataSource dataSource) {
-        boolean result = true;
+    public void finishIssue(Issue issue, DataSource dataSource) throws SQLException {
 
-        try (Connection connection = dataSource.getConnection()) {
-            connection.setAutoCommit(false);
+        Connection connection = dataSource.getConnection();
+        connection.setAutoCommit(false);
 
-            ResultSet resultSet = readerDao.selectReaderId(connection, issue.getReaderEmail());
-            if (resultSet.next()) {
-                issue.setReaderId(resultSet.getInt(1));
+        issue.setReaderId(readerDao.selectReaderId(connection, issue.getReaderEmail()));
+
+        issueDao.insertPayment(connection, issue);
+
+        for (BookCopy book : issue.getReturned()) {
+            book.setId(issueDao.selectTakenCopy(connection, book.getName(), issue.getReaderId()));
+
+            String existingDamage = issueDao.selectDamage(connection, book.getId());
+
+            if (!Objects.equals(existingDamage, "")) {
+                book.setDamage(existingDamage + " " + book.getDamage());
             }
 
-            issueDao.insertPayment(connection, issue);
+            issueDao.insertDamage(connection, book);
 
-            for (BookCopy book : issue.getReturned()) {
-                resultSet = issueDao.selectTakenCopy(connection, book.getName(), issue.getReaderId());
-                if (resultSet.next()) {
-                    book.setId(resultSet.getInt(1));
+            if (book.getDamagePhotos() != null) {
+                for (InputStream photo : book.getDamagePhotos()) {
+                    issueDao.insertDamagePhoto(connection, photo, book.getId());
                 }
-
-                resultSet = issueDao.selectDamage(connection, book.getId());
-                String existingDamage = "";
-                if (resultSet.next()) {
-                    existingDamage = resultSet.getString(1);
-                }
-
-                if (existingDamage != null) {
-                    book.setDamage(existingDamage + " " + book.getDamage());
-                }
-
-                issueDao.insertDamage(connection, book);
-
-                if (book.getDamagePhotos() != null) {
-                    for (InputStream photo : book.getDamagePhotos()) {
-                        issueDao.insertDamagePhoto(connection, photo, book.getId());
-                    }
-                }
-
-
-                issueDao.updateIssue(connection, issue, book);
             }
 
-            connection.commit();
-        } catch (SQLException e) {
-            logger.log(Level.SEVERE, "Finishing issue exception ", e);
-            result = false;
+
+            issueDao.updateIssue(connection, issue, book);
         }
 
-        return result;
+        connection.commit();
+        connection.close();
     }
 
-    public Profitability calcProfit(Date start, Date finish, DataSource dataSource) {
+    public Profitability calcProfit(Date start, Date finish, DataSource dataSource) throws SQLException {
         Profitability profitability = new Profitability();
 
-        try (Connection connection = dataSource.getConnection()) {
-            ResultSet resultSet = profitDao.selectBooksAmount(start, finish, connection);
-            if(resultSet.next()){
-                profitability.setBooksAmount(resultSet.getInt(1));
-            }
+        Connection connection = dataSource.getConnection();
+        profitability.setBooksAmount(profitDao.selectBooksAmount(start, finish, connection));
 
-            double revenue = 0;
-            resultSet = profitDao.selectPayments(start, finish, connection);
-            while(resultSet.next()){
-                revenue += resultSet.getDouble(1);
-            }
-            profitability.setRevenue(revenue);
+        profitability.setRevenue(profitDao.selectPayments(start, finish, connection));
 
-            resultSet = profitDao.selectReadersAmount(start, finish, connection);
-            if(resultSet.next()){
-                profitability.setReadersAmount(resultSet.getInt(1));
-            }
+        profitability.setReadersAmount(profitDao.selectReadersAmount(start, finish, connection));
 
-        } catch (SQLException e) {
-            logger.log(Level.SEVERE, "Calculating profit exception", e);
-        }
-
+        connection.close();
         return profitability;
     }
 }

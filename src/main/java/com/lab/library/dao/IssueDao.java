@@ -37,23 +37,42 @@ public class IssueDao {
         preparedStatement.executeUpdate();
     }
 
-    public ResultSet selectBookCopy(Connection connection, String bookName) throws SQLException {
+    public BookCopy selectBookCopy(Connection connection, String bookName) throws SQLException {
+        BookCopy bookCopy = new BookCopy();
         PreparedStatement preparedStatement = connection.prepareStatement(SELECT_BOOK_COPY);
         preparedStatement.setString(1, bookName);
-        return preparedStatement.executeQuery();
+        ResultSet resultSet = preparedStatement.executeQuery();
+        if (resultSet.next()) {
+            bookCopy.setId(resultSet.getInt(1));
+            bookCopy.setDamage(resultSet.getString(2));
+        }
+
+        return bookCopy;
     }
 
-    public ResultSet selectTakenCopy(Connection connection, String bookName, int readerId) throws SQLException {
+    public int selectTakenCopy(Connection connection, String bookName, int readerId) throws SQLException {
+        int id = 0;
         PreparedStatement preparedStatement = connection.prepareStatement(SELECT_TAKEN_COPY);
         preparedStatement.setInt(1, readerId);
         preparedStatement.setString(2, bookName);
-        return preparedStatement.executeQuery();
+        ResultSet resultSet = preparedStatement.executeQuery();
+        if (resultSet.next()) {
+            id = resultSet.getInt(1);
+        }
+
+        return id;
     }
 
-    public ResultSet selectDamage(Connection connection, int copyId) throws SQLException {
+    public String selectDamage(Connection connection, int copyId) throws SQLException {
+        String damage = "";
         PreparedStatement preparedStatement = connection.prepareStatement(SELECT_DAMAGE);
         preparedStatement.setInt(1, copyId);
-        return preparedStatement.executeQuery();
+        ResultSet resultSet = preparedStatement.executeQuery();
+        if (resultSet.next()) {
+            damage = resultSet.getString(1);
+        }
+
+        return damage;
     }
 
     public void insertDamage(Connection connection, BookCopy bookCopy) throws SQLException {

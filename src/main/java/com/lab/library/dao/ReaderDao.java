@@ -1,11 +1,16 @@
 package com.lab.library.dao;
 
+import com.lab.library.beans.Book;
+import com.lab.library.beans.BookCopy;
 import com.lab.library.beans.Reader;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 public class ReaderDao {
     public final String INSERT_READER = "INSERT INTO reader" +
@@ -44,40 +49,86 @@ public class ReaderDao {
         preparedStatement.executeUpdate();
     }
 
-    public ResultSet selectReaders(Connection connection) throws SQLException {
+    public List<Reader> selectReaders(Connection connection) throws SQLException {
+        List<Reader> readers = new ArrayList<>();
         PreparedStatement preparedStatement = connection.prepareStatement(SELECT_READERS);
+        ResultSet resultSet = preparedStatement.executeQuery();
+        while (resultSet.next()) {
+            readers.add(new Reader(resultSet.getInt("id"),
+                    resultSet.getString("surname"),
+                    resultSet.getString("name"),
+                    resultSet.getDate("dateOfBirth"),
+                    resultSet.getString("address"),
+                    resultSet.getString("email")));
+        }
 
-        return preparedStatement.executeQuery();
+        return readers;
     }
 
-    public ResultSet selectReaderId(Connection connection, String email) throws SQLException {
+    public int selectReaderId(Connection connection, String email) throws SQLException {
+        int id = 0;
         PreparedStatement preparedStatement = connection.prepareStatement(SELECT_READER_ID);
         preparedStatement.setString(1, email);
+        ResultSet resultSet = preparedStatement.executeQuery();
+        if (resultSet.next()) {
+            id = resultSet.getInt(1);
+        }
 
-        return preparedStatement.executeQuery();
+        return id;
     }
 
-    public ResultSet selectNotReturned(Connection connection, int id) throws SQLException {
+    public int selectNotReturned(Connection connection, int id) throws SQLException {
+        int amount = 0;
+
         PreparedStatement preparedStatement = connection.prepareStatement(SELECT_NOT_RETURNED);
         preparedStatement.setInt(1, id);
+        ResultSet resultSet = preparedStatement.executeQuery();
+        if (resultSet.next()) {
+            amount = resultSet.getInt(1);
+        }
 
-        return preparedStatement.executeQuery();
+        return amount;
     }
 
-    public ResultSet selectAllBooks(Connection connection, String email) throws SQLException {
+    public List<BookCopy> selectAllBooks(Connection connection, String email) throws SQLException {
+        List<BookCopy> result = new ArrayList<>();
+
         PreparedStatement preparedStatement = connection.prepareStatement(SELECT_ALL_BOOKS);
         preparedStatement.setString(1, email);
-        return preparedStatement.executeQuery();
+        ResultSet resultSet = preparedStatement.executeQuery();
+        while (resultSet.next()) {
+            result.add(new BookCopy(resultSet.getString(3), resultSet.getInt("discount"),
+                    String.valueOf(resultSet.getDate("preliminaryDate")), resultSet.getDouble(4)));
+        }
+
+        return result;
     }
 
-    public ResultSet selectOverdue(Connection connection) throws SQLException {
+    public HashMap<String, String> selectOverdue(Connection connection) throws SQLException {
+        HashMap<String, String> result = new HashMap<>();
+
         PreparedStatement preparedStatement = connection.prepareStatement(SELECT_OVERDUE);
-        return preparedStatement.executeQuery();
+        ResultSet resultSet = preparedStatement.executeQuery();
+        while(resultSet.next()){
+            result.put(resultSet.getString(1), resultSet.getString(2));
+        }
+
+        return result;
     }
 
-    public ResultSet selectOverdueBooks(Connection connection, String email) throws SQLException {
+    public List<Book> selectOverdueBooks(Connection connection, String email) throws SQLException {
+        List<Book> books = new ArrayList<>();
+
         PreparedStatement preparedStatement = connection.prepareStatement(SELECT_OVERDUE_BOOKS);
         preparedStatement.setString(1, email);
-        return preparedStatement.executeQuery();
+        ResultSet resultSet = preparedStatement.executeQuery();
+        while (resultSet.next()){
+            Book book = new Book();
+            book.setNameInRus(resultSet.getString(1));
+            book.setPriceForDay(resultSet.getDouble(2));
+            books.add(book);
+        }
+
+        return books;
     }
 }

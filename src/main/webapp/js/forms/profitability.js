@@ -40,6 +40,10 @@ let profitability = {
             start: profitability.startDate.value,
             finish: profitability.finishDate.value
         }, function (responseJson) {
+            if (!responseJson) {
+                alert("Не удалось рассчитать доходность");
+                return false;
+            }
             $('#info').html('Выручка: ' + responseJson['revenue'] + '<br>' +
                 'Количество книг: ' + responseJson['booksAmount'] + '<br>' +
                 'Количество читателей: ' + responseJson['readersAmount']);

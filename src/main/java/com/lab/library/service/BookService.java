@@ -9,267 +9,179 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Connection;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.Base64;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 public class BookService {
-    private final Logger logger = Logger.getLogger(BookService.class.getName());
     private final AuthorDao authorDao = new AuthorDao();
     private final BookDao bookDao = new BookDao();
 
     public BookService() {
     }
 
-    public boolean addBook(Book book, DataSource dataSource) {
-        boolean result = true;
+    public void addBook(Book book, DataSource dataSource) throws SQLException {
 
-        try (Connection connection = dataSource.getConnection()) {
-            connection.setAutoCommit(false);
+        Connection connection = dataSource.getConnection();
+        connection.setAutoCommit(false);
 
-            ResultSet resultSet = bookDao.insertIntoBook(connection, book);
-            if (resultSet.next()) {
-                book.setId(resultSet.getInt(1));
-            }
+        book.setId(bookDao.insertIntoBook(connection, book));
 
-            for (InputStream cover : book.getCovers()) {
-                bookDao.insertIntoCover(connection, book.getId(), cover);
-            }
-
-            for (int genre : book.getGenresId()) {
-                bookDao.insertIntoGenre(connection, book.getId(), genre);
-            }
-
-            for (Author author : book.getAuthors()) {
-                resultSet = authorDao.selectAuthorId(connection, author);
-
-                int authorId = 0;
-                if (!resultSet.next()) {
-                    resultSet = authorDao.insertAuthor(connection, author);
-                    resultSet.next();
-                }
-                authorId = resultSet.getInt(1);
-                author.setId(authorId);
-
-                authorDao.insertAuthorBook(connection, author, book);
-                for (InputStream photo : author.getPhotos()) {
-                    authorDao.insertPhotos(connection, author.getId(), photo);
-                }
-            }
-
-            for (int i = 0; i < book.getTotalAmount(); i++) {
-                bookDao.insertIntoBookCopy(connection, book);
-            }
-
-
-            connection.commit();
-        } catch (SQLException e) {
-            logger.log(Level.WARNING, "Adding book exception", e);
-            result = false;
+        for (InputStream cover : book.getCovers()) {
+            bookDao.insertIntoCover(connection, book.getId(), cover);
         }
 
-        return result;
+        for (int genre : book.getGenresId()) {
+            bookDao.insertIntoGenre(connection, book.getId(), genre);
+        }
+
+        for (Author author : book.getAuthors()) {
+            int authorId = authorDao.selectAuthorId(connection, author);
+
+            if (authorId == 0) {
+                authorId = authorDao.insertAuthor(connection, author);
+            }
+            author.setId(authorId);
+
+            authorDao.insertAuthorBook(connection, author, book);
+            for (InputStream photo : author.getPhotos()) {
+                authorDao.insertPhotos(connection, author.getId(), photo);
+            }
+        }
+
+        for (int i = 0; i < book.getTotalAmount(); i++) {
+            bookDao.insertIntoBookCopy(connection, book);
+        }
+
+        connection.commit();
+        connection.close();
     }
 
-    public Map<Integer, String> selectGenres(DataSource dataSource) {
-        Map<Integer, String> genres = new HashMap<>();
+    public Map<Integer, String> selectGenres(DataSource dataSource) throws SQLException {
+        Connection connection = dataSource.getConnection();
 
-        try (Connection connection = dataSource.getConnection()) {
-            ResultSet resultSet = bookDao.selectGenres(connection);
+        Map<Integer, String> genres = bookDao.selectGenres(connection);
 
-            while (resultSet.next()) {
-                genres.put(resultSet.getInt(1), resultSet.getString(2));
-            }
-        } catch (SQLException e) {
-            logger.log(Level.SEVERE, "Selecting genres exception", e);
-        }
-
+        connection.close();
         return genres;
     }
 
-    public List<Book> selectBooks(DataSource dataSource) {
-        List<Book> books = new ArrayList<>();
+    public List<Book> selectBooks(DataSource dataSource) throws SQLException {
+        Connection connection = dataSource.getConnection();
 
-        try (Connection connection = dataSource.getConnection()) {
-            ResultSet resultSet = bookDao.selectFromBook(connection);
+        List<Book> books = bookDao.selectFromBook(connection);
 
-            while (resultSet.next()) {
-                Book book = new Book();
-                book.setId(resultSet.getInt("id"));
-                book.setNameInRus(resultSet.getString("nameInRus"));
-                book.setYear(resultSet.getInt("publYear"));
+        for (Book book : books) {
+            book.setTotalAmount(bookDao.selectTotal(connection, book.getId()));
 
-                ResultSet set = bookDao.selectTotal(connection, book.getId());
-                set.next();
-                book.setTotalAmount(set.getInt(1));
+            book.setAvailableAmount(book.getTotalAmount() - bookDao.selectNotAvailable(connection, book.getId()));
 
-                set = bookDao.selectNotAvailable(connection, book.getId());
-                set.next();
-                book.setAvailableAmount(book.getTotalAmount() - set.getInt(1));
-
-                List<String> genres = new ArrayList<>();
-                set = bookDao.selectBookGenres(connection, book);
-                while (set.next()) {
-                    genres.add(set.getString("name"));
-                }
-                book.setGenres(genres);
-
-                books.add(book);
-            }
-        } catch (SQLException e) {
-            logger.log(Level.SEVERE, "Selecting books exception", e);
+            book.setGenres(bookDao.selectBookGenres(connection, book));
         }
 
         Collections.sort(books);
+        connection.close();
         return books;
     }
 
-    public Status checkBook(String name, DataSource dataSource) {
-        Status status = null;
+    public Status checkBook(String name, DataSource dataSource) throws SQLException {
+        Status status;
 
-        try (Connection connection = dataSource.getConnection()) {
-            ResultSet resultSet = bookDao.selectBookId(connection, name);
-            int id = 0;
-            if (resultSet.next()) {
-                id = resultSet.getInt(1);
-            }
+        Connection connection = dataSource.getConnection();
+        int id = bookDao.selectBookId(connection, name);
 
+        int total = bookDao.selectTotal(connection, id);
 
-            resultSet = bookDao.selectTotal(connection, id);
-            int total = 0;
-            if (resultSet.next()) {
-                total = resultSet.getInt(1);
-            }
+        if (total == 0) {
+            status = Status.NON_EXISTENT;
+        } else {
+            int available = total - bookDao.selectNotAvailable(connection, id);
 
-            if (total == 0) {
-                status = Status.NON_EXISTENT;
+            if (available > 0) {
+                status = Status.AVAIlABLE;
             } else {
-                resultSet = bookDao.selectNotAvailable(connection, id);
-                int available = 0;
-                if (resultSet.next()) {
-                    available = total - resultSet.getInt(1);
-                }
-
-                if (available > 0) {
-                    status = Status.AVAIlABLE;
-                } else {
-                    status = Status.LOCKED;
-                }
+                status = Status.LOCKED;
             }
-        } catch (SQLException e) {
-            logger.log(Level.SEVERE, "Checking books exception", e);
         }
 
+        connection.close();
         return status;
     }
 
-    public double selectCost(String name, DataSource dataSource) {
-        double result = 0;
+    public double selectCost(String name, DataSource dataSource) throws SQLException {
+        Connection connection = dataSource.getConnection();
 
-        try (Connection connection = dataSource.getConnection()) {
-            ResultSet resultSet = bookDao.selectCost(connection, name);
-            if (resultSet.next()) {
-                result = resultSet.getDouble(1);
-            }
+        double result = bookDao.selectCost(connection, name);
 
-        } catch (SQLException e) {
-            logger.log(Level.SEVERE, "Selecting cost exception", e);
-        }
-
+        connection.close();
         return result;
     }
 
-    public List<PopularBook> selectPopular(DataSource dataSource) {
-        List<PopularBook> popular = new ArrayList<>();
+    public List<PopularBook> selectPopular(DataSource dataSource) throws SQLException, IOException {
+        Connection connection = dataSource.getConnection();
 
-        try (Connection connection = dataSource.getConnection()) {
-            ResultSet resultSet = bookDao.selectPopular(connection);
-            while (resultSet.next()) {
-                PopularBook popularBook = new PopularBook();
-                int bookId = resultSet.getInt(1);
-                popularBook.setAmount(resultSet.getInt(2));
+        List<PopularBook> popular = bookDao.selectPopular(connection);
 
-                ResultSet result = bookDao.selectCover(connection, bookId);
-                while (result.next()) {
-                    InputStream inputStream = result.getBinaryStream(1);
-                    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-                    byte[] buffer = new byte[4096];
-                    int bytesRead = -1;
+        for (PopularBook popularBook : popular) {
 
-                    while ((bytesRead = inputStream.read(buffer)) != -1) {
-                        outputStream.write(buffer, 0, bytesRead);
-                    }
+            InputStream inputStream = bookDao.selectCover(connection, popularBook.getId());
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            byte[] buffer = new byte[4096];
+            int bytesRead = -1;
 
-                    byte[] imageBytes = outputStream.toByteArray();
-
-                    String base64Image = Base64.getEncoder().encodeToString(imageBytes);
-
-                    inputStream.close();
-                    outputStream.close();
-                    popularBook.setBase64Image(base64Image);
-                }
-
-                result = bookDao.selectRating(connection, bookId);
-                if (result.next()) {
-                    popularBook.setRating(result.getDouble(1));
-                }
-
-                popular.add(popularBook);
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                outputStream.write(buffer, 0, bytesRead);
             }
-        } catch (SQLException | IOException e) {
-            logger.log(Level.SEVERE, "Selecting popular books exception ", e);
+
+            byte[] imageBytes = outputStream.toByteArray();
+
+            String base64Image = Base64.getEncoder().encodeToString(imageBytes);
+
+            inputStream.close();
+            outputStream.close();
+            popularBook.setBase64Image(base64Image);
+
+            popularBook.setRating(bookDao.selectRating(connection, popularBook.getId()));
+
         }
 
+        connection.close();
         return popular;
     }
 
-    public BookCopy selectCopyInfo(int id, DataSource dataSource) {
+    public BookCopy selectCopyInfo(int id, DataSource dataSource) throws SQLException {
         BookCopy bookCopy = new BookCopy();
 
-        try (Connection connection = dataSource.getConnection()) {
-            ResultSet resultSet = bookDao.isCopyExisting(connection, id);
-            if (resultSet.next()) {
-                resultSet = bookDao.isIssued(connection, id);
-                if (!resultSet.next()) {
-                    resultSet = bookDao.selectCopyInfo(connection, id);
-                    bookCopy.setId(id);
-                    if (resultSet.next()) {
-                        bookCopy.setName(resultSet.getString(1));
-                        bookCopy.setDamage(resultSet.getString(2));
-                    }
+        Connection connection = dataSource.getConnection();
+        if (bookDao.isCopyExisting(connection, id)) {
+            if (!bookDao.isIssued(connection, id)) {
+                bookCopy.setId(id);
+                bookCopy = bookDao.selectCopyInfo(connection, bookCopy);
 
-
-                } else {
-                    bookCopy.setId(0);
-                }
             } else {
-                bookCopy.setId(-1);
+                bookCopy.setId(0);
             }
-        } catch (SQLException e) {
-            logger.log(Level.SEVERE, "Selecting copy info exception ", e);
+        } else {
+            bookCopy.setId(-1);
         }
 
+        connection.close();
         return bookCopy;
     }
 
-    public boolean writeOff(int id, DataSource dataSource) {
-        boolean result = true;
+    public void writeOff(int id, DataSource dataSource) throws SQLException {
+        Connection connection = dataSource.getConnection();
+        connection.setAutoCommit(false);
 
-        try (Connection connection = dataSource.getConnection()) {
-            connection.setAutoCommit(false);
-            ResultSet resultSet = bookDao.selectCopyInfo(connection, id);
-            if (resultSet.next()) {
-                bookDao.insertArchive(connection, id, resultSet.getString(2), resultSet.getString(1));
-            }
-            bookDao.deleteCopy(connection, id);
-            connection.commit();
-        } catch (SQLException e) {
-            logger.log(Level.SEVERE, "Writing off exception ", e);
-            result = false;
-        }
+        BookCopy bookCopy = new BookCopy();
+        bookCopy.setId(id);
+        bookCopy = bookDao.selectCopyInfo(connection, bookCopy);
+        bookDao.insertArchive(connection, bookCopy.getId(), bookCopy.getDamage(), bookCopy.getName());
+        bookDao.deleteCopy(connection, bookCopy.getId());
 
-        return result;
+        connection.commit();
+        connection.close();
     }
 }
